@@ -1,0 +1,38 @@
+import Signin from "@/components/Signin";
+import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Sign in",
+};
+
+export default function SignIn() {
+  return (
+    <>
+      <div className="rounded-[10px] bg-white shadow-1 dark:bg-gray-dark dark:shadow-card">
+        <div className="flex flex-wrap items-center">
+          <div className="w-full xl:w-1/2">
+            <div className="w-full p-4 sm:p-12.5 xl:p-15">
+              <Signin />
+            </div>
+          </div>
+
+          <div className="hidden w-full p-7.5 xl:block xl:w-1/2">
+            <div className="custom-gradient-1 overflow-hidden rounded-2xl px-12.5 pb-20 pt-12.5 dark:!bg-dark-2 dark:bg-none">
+              <Link className="mb-10 inline-block" href="/">
+                <Image
+                  className="dark:hidden"
+                  src={"/images/logo_pl_radiologie.png"}
+                  alt="Logo"
+                  width={1900}
+                  height={32}
+                />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
