@@ -13,7 +13,6 @@ const ROLE_URL_MAP: Record<string, Record<string, string>> = {
     Factures: "/admin/factures",
   },
   assistante: {
-    Dashboard: "/assistante",
     "Rendez-vous": "/assistante/calendar",
     Profile: "/assistante/pages/settings",
     Factures: "/assistante/factures",
@@ -50,9 +49,9 @@ export function getNavDataForRole(role: string) {
         { title: "Profile", icon: Icons.User, items: [], url: urls["Profile"] },
         { title: "Actes", icon: Icons.Alphabet, items: [], url: urls["Actes"] },
         { title: "Users", icon: Icons.User, items: [], url: urls["Users"] },
-        { title: "Images", icon: Icons.Table, items: [], url: urls["Images"] },
+        { title: "Images", icon: Icons.FourCircle, items: [], url: urls["Images"] },
         { title: "Comptes rendus", icon: Icons.Table, items: [], url: urls["Comptes rendus"] },
-        { title: "Factures", icon: Icons.Table, items: [], url: urls["Factures"] },
+        { title: "Factures", icon: Icons.PieChart, items: [], url: urls["Factures"] },
       ].filter((item) => item.url), // supprime les items non autorisés
     },
   ];

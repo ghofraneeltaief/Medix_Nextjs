@@ -1,39 +1,46 @@
 "use client";
+
 import { CallIcon, EmailIcon, UserIcon } from "@/assets/icons";
 import InputGroup from "@/components/FormElements/InputGroup";
 import { ShowcaseSection } from "@/components/Layouts/showcase-section";
 import { useEffect, useState } from "react";
-import { Alert } from "@/components/ui-elements/alert";
+import Swal from "sweetalert2";
 import { getProfile, updateUser, UserProfile } from "@/services/userService";
 
 export function PersonalInfoForm() {
- const [formData, setFormData] = useState<UserProfile>({
+  const [formData, setFormData] = useState<UserProfile>({
     id: "",
     name: "",
     lastName: "",
     email: "",
-    password: "",
+    password: "********",
     role: "",
   });
-
-  const [alert, setAlert] = useState<{
-    variant: "error" | "success";
-    title: string;
-    description: string;
-  } | null>(null);
 
   // Charger le profil
   const loadProfile = async () => {
     try {
-      const token = localStorage.getItem("token")!;
+      const token = localStorage.getItem("token");
+      if (!token) {
+        Swal.fire({
+          icon: "error",
+          title: "Erreur",
+          text: "Vous devez être connecté",
+        });
+        return;
+      }
+
       const profile = await getProfile(token);
-      setFormData(profile);
+      setFormData({
+        ...profile,
+        password: "********", // masquer le mot de passe
+      });
     } catch (err) {
       console.error(err);
-      setAlert({
-        variant: "error",
+      Swal.fire({
+        icon: "error",
         title: "Erreur",
-        description: "Impossible de charger le profil",
+        text: "Impossible de charger le profil",
       });
     }
   };
@@ -42,26 +49,52 @@ export function PersonalInfoForm() {
     loadProfile();
   }, []);
 
+  // Gestion du submit
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem("token")!;
-      const updated = await updateUser(token, formData.id, formData);
-      setFormData(updated);
-      setAlert({
-        variant: "success",
-        title: "Succès",
-        description: "Profil mis à jour",
-      });
-    } catch (err) {
-      console.error(err);
-      setAlert({
-        variant: "error",
+  e.preventDefault();
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      Swal.fire({
+        icon: "error",
         title: "Erreur",
-        description: "Mise à jour échouée",
+        text: "Vous devez être connecté",
       });
+      return;
     }
-  };
+
+    // Si le mot de passe est "********", on ne l’envoie pas pour éviter de l’écraser
+    const submitData = {
+      ...formData,
+      password: formData.password === "********" ? undefined : formData.password,
+    };
+
+    const updatedRaw = await updateUser(token, formData.id, submitData);
+
+    // ⚡ Transformer id en string pour TypeScript
+    const updated: UserProfile = {
+      ...updatedRaw,
+      id: updatedRaw.id?.toString() || "",
+      password: "********", // masquer le mot de passe
+    };
+
+    setFormData(updated);
+
+    Swal.fire({
+      icon: "success",
+      title: "Succès",
+      text: "Profil mis à jour avec succès",
+    });
+  } catch (err) {
+    console.error(err);
+    Swal.fire({
+      icon: "error",
+      title: "Erreur",
+      text: "Mise à jour échouée",
+    });
+  }
+};
+
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -69,16 +102,9 @@ export function PersonalInfoForm() {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
   return (
     <ShowcaseSection title="Personal Information" className="!p-7">
-      {alert && (
-        <Alert
-          variant={alert.variant}
-          title={alert.title}
-          description={alert.description}
-          className="mb-4"
-        />
-      )}
       <form onSubmit={handleSubmit}>
         <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
           <InputGroup
@@ -136,15 +162,16 @@ export function PersonalInfoForm() {
 
         <div className="flex justify-end gap-3">
           <button
-            className="rounded-lg border border-stroke px-6 py-[7px] font-medium text-dark hover:shadow-1 dark:border-dark-3 dark:text-white"
             type="button"
+            className="rounded-lg border border-stroke px-6 py-[7px] font-medium text-dark hover:shadow-1 dark:border-dark-3 dark:text-white"
+            onClick={loadProfile}
           >
-            Cancel
+            Reload
           </button>
 
           <button
-            className="rounded-lg bg-primary px-6 py-[7px] font-medium text-gray-2 hover:bg-opacity-90"
             type="submit"
+            className="rounded-lg bg-primary px-6 py-[7px] font-medium text-gray-2 hover:bg-opacity-90"
           >
             Save
           </button>

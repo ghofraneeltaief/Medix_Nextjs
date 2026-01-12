@@ -50,10 +50,10 @@ export default function SigninWithPassword() {
           router.push("/admin");
           break;
         case "assistante":
-          router.push("/assistante");
+          router.push("/assistante/calendar");
           break;
         case "médecin":
-          router.push("/medecin-externe");
+          router.push("/medecin-externe/image");
           break;
         case "médecin radiologue":
           router.push("/radiologue");

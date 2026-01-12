@@ -11,7 +11,6 @@ const CalendarPage = () => {
   return (
     <>
       <Breadcrumb pageName="Calendar" />
-
       <CalendarBox />
     </>
   );

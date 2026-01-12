@@ -15,7 +15,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 // ---------------------------
 // Profil utilisateur
 // ---------------------------
-export const getProfile = async (token: string): Promise<UserProfile> => {
+export async function getProfile(token: string): Promise<UserProfile> {
   const res = await fetch(`${API_URL}/auth/profile`, {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -32,11 +32,36 @@ export const getProfile = async (token: string): Promise<UserProfile> => {
     name: data.name,
     lastName: data.lastName,
     email: data.email,
-    password: "********", // Ne pas exposer le mot de passe réel
+    password: "********",
     role: data.role,
   };
-};
+}
 
+// ---------------------------
+// Mettre à jour un utilisateur
+// ---------------------------
+export async function updateUser(
+  token: string,
+  id: string,
+  user: Partial<Omit<User, "id">>
+): Promise<User> {
+  const res = await fetch(`${API_URL}/users/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(user),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("Erreur updateUser:", res.status, text);
+    throw new Error("Impossible de mettre à jour l’utilisateur");
+  }
+
+  return res.json();
+}
 export interface User {
   id?: number;
   name: string;
@@ -82,18 +107,6 @@ export async function createUser(user: Omit<User, "id">): Promise<User> {
   return res.json();
 }
 
-// Mettre à jour un utilisateur
-export async function updateUser(id: number, user: Partial<Omit<User, "id">>): Promise<User> {
-  const res = await fetch(`${API_URL}/users/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(user),
-  });
-
-  if (!res.ok) throw new Error("Impossible de mettre à jour l’utilisateur");
-  return res.json();
-}
-
 // Supprimer un utilisateur
 export async function deleteUser(id: number): Promise<boolean> {
   const res = await fetch(`${API_URL}/users/${id}`, {
@@ -112,3 +125,15 @@ export const findUserByName = async (name: string, lastName: string): Promise<Us
   if (!res.ok) throw new Error("Erreur recherche utilisateur");
   return res.json();
 };
+// ---------------------------
+// Récupérer uniquement les médecins
+// ---------------------------
+export async function getMedecins(): Promise<User[]> {
+  const res = await fetch(`${API_URL}/users`);
+  if (!res.ok) throw new Error("Impossible de récupérer les utilisateurs");
+
+  const users: User[] = await res.json();
+
+  // Garder seulement les médecins
+  return users.filter((u) => u.role?.toLowerCase() === "médecin");
+}
