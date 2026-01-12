@@ -56,10 +56,10 @@ export default function SigninWithPassword() {
           router.push("/medecin-externe/image");
           break;
         case "médecin radiologue":
-          router.push("/radiologue");
+          router.push("/radiologue/image");
           break;
         case "technicien":
-          router.push("/technicien");
+          router.push("/technicien/image");
           break;
         default:
           router.push("/"); // fallback

@@ -1,9 +1,5 @@
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import { InvoiceTable } from "@/components/Tables/users/TableUser";
-import { TopChannels } from "@/components/Tables/top-channels";
-import { TopChannelsSkeleton } from "@/components/Tables/top-channels/skeleton";
-import { TopProducts } from "@/components/Tables/top-products";
-import { TopProductsSkeleton } from "@/components/Tables/top-products/skeleton";
+import { TableCompteRendu } from "@/components/Tables/compteRendu/TableCompteRendu";
 
 import { Metadata } from "next";
 import { Suspense } from "react";
@@ -12,16 +8,16 @@ export const metadata: Metadata = {
   title: "Tables",
 };
 
-const TablesPage = () => {
+export default function CompteRenduPage() {
   return (
     <>
       <Breadcrumb pageName="Comptes rendus" />
 
       <div className="space-y-10">
-        <InvoiceTable />
+        <TableCompteRendu />
       </div>
     </>
   );
 };
 
-export default TablesPage;
+

@@ -11,49 +11,55 @@ import {
 } from "@/components/ui/table";
 import { Imagerie } from "@/services/imageService";
 
-interface Props {
+interface ImagerieTableProps {
   data: Imagerie[];
   onEdit: (img: Imagerie) => void;
   onDelete: (img: Imagerie) => void;
 }
 
-export function TableImagerie({ data, onEdit, onDelete }: Props) {
+export function TableImagerie({ data, onEdit, onDelete }: ImagerieTableProps) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow className="bg-[#F7F9FC] dark:bg-dark-2">
-          <TableHead>Type</TableHead>
-          <TableHead>URL</TableHead>
-          <TableHead>Aperçu</TableHead>
-          <TableHead>Compte Rendu</TableHead>
-          <TableHead>Rendez-vous</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {data.map((img) => (
-          <TableRow key={img.id}>
-            <TableCell>{img.type}</TableCell>
-            <TableCell className="truncate max-w-[200px]">{img.urlImage}</TableCell>
-            <TableCell>
-              <img src={img.urlImage} alt={img.type} className="h-12 w-12 rounded object-cover" />
-            </TableCell>
-            <TableCell>{img.compteRenduId}</TableCell>
-            <TableCell>{img.rendezVousId}</TableCell>
-            <TableCell>
-              <div className="flex justify-end gap-2">
-                <button onClick={() => onEdit(img)} className="hover:text-primary">
-                  <PencilSquareIcon />
-                </button>
-                <button onClick={() => onDelete(img)} className="hover:text-red-500">
-                  <TrashIcon />
-                </button>
-              </div>
-            </TableCell>
+    <div>
+      <Table>
+        <TableHeader>
+          <TableRow className="border-none bg-[#F7F9FC] dark:bg-dark-2 [&>th]:py-4 [&>th]:text-base [&>th]:text-dark [&>th]:dark:text-white">
+            <TableHead className="min-w-[155px] xl:pl-7.5">Type</TableHead>
+            <TableHead>URL</TableHead>
+            <TableHead>Aperçu</TableHead>
+            <TableHead className="text-right xl:pr-7.5">Actions</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+
+        <TableBody>
+          {data.map((img, index) => (
+            <TableRow key={img.id || index} className="border-[#eee] dark:border-dark-3">
+              <TableCell className="min-w-[150px] xl:pl-7.5">{img.type}</TableCell>
+
+              <TableCell className="truncate max-w-[200px]">{img.urlImage}</TableCell>
+
+              <TableCell>
+                <img
+                  src={img.urlImage}
+                  alt={img.type}
+                  className="h-12 w-12 rounded object-cover"
+                />
+              </TableCell>
+
+              <TableCell className="xl:pr-7.5">
+                <div className="flex items-center justify-end gap-x-3.5">
+                  <button onClick={() => onEdit(img)} className="hover:text-primary">
+                    <PencilSquareIcon />
+                  </button>
+
+                  <button onClick={() => onDelete(img)} className="hover:text-red-500">
+                    <TrashIcon />
+                  </button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

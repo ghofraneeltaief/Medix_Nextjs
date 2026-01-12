@@ -18,19 +18,16 @@ const ROLE_URL_MAP: Record<string, Record<string, string>> = {
     Factures: "/assistante/factures",
   },
   médecin: {
-    Dashboard: "/medecin-externe",
     Profile: "/medecin-externe/pages/settings",
     Images: "/medecin-externe/image",
     "Comptes rendus": "/medecin-externe/compterendu",
   },
   "médecin radiologue": {
-    Dashboard: "/radiologue",
     Profile: "/radiologue/pages/settings",
     Images: "/radiologue/image",
     "Comptes rendus": "/radiologue/compterendu",
   },
   technicien: {
-    Dashboard: "/technicien",
     Profile: "/technicien/pages/settings",
     Images: "/technicien/image",
   },
