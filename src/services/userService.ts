@@ -16,25 +16,48 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 // Profil utilisateur
 // ---------------------------
 export async function getProfile(token: string): Promise<UserProfile> {
-  const res = await fetch(`${API_URL}/auth/profile`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  try {
+    console.log("Chargement du profil depuis la base de données...");
+    
+    const res = await fetch(`${API_URL}/auth/profile`, {
+      method: "GET",
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
 
-  if (!res.ok) {
-    const text = await res.text();
-    console.error("Erreur getProfile:", res.status, text);
-    throw new Error("Erreur récupération profil");
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("Erreur getProfile:", res.status, text);
+      throw new Error(`Erreur récupération profil: ${res.status}`);
+    }
+
+    const data = await res.json();
+    console.log("Données du profil récupérées depuis la base de données:", {
+      userId: data.userId,
+      name: data.name,
+      lastName: data.lastName,
+      email: data.email,
+      role: data.role,
+    });
+
+    const profile: UserProfile = {
+      id: data.userId?.toString() || "",
+      name: data.name || "",
+      lastName: data.lastName || "",
+      email: data.email || "",
+      password: "********",
+      role: data.role || "",
+    };
+
+    console.log("Profil formaté:", profile);
+    return profile;
+  } catch (error) {
+    console.error("Erreur dans getProfile:", error);
+    throw error;
   }
-
-  const data = await res.json();
-  return {
-    id: data.userId,
-    name: data.name,
-    lastName: data.lastName,
-    email: data.email,
-    password: "********",
-    role: data.role,
-  };
 }
 
 // ---------------------------
@@ -45,19 +68,47 @@ export async function updateUser(
   id: string,
   user: Partial<Omit<User, "id">>
 ): Promise<User> {
+  // Créer un objet propre sans les champs undefined ou vides
+  const cleanUser: any = {};
+  
+  if (user.name !== undefined && user.name.trim() !== "") {
+    cleanUser.name = user.name;
+  }
+  if (user.lastName !== undefined && user.lastName.trim() !== "") {
+    cleanUser.lastName = user.lastName;
+  }
+  if (user.email !== undefined && user.email.trim() !== "") {
+    cleanUser.email = user.email;
+  }
+  if (user.role !== undefined && user.role.trim() !== "") {
+    cleanUser.role = user.role;
+  }
+  // Le mot de passe n'est inclus QUE s'il est explicitement fourni et non vide
+  if (user.password !== undefined && user.password.trim() !== "") {
+    cleanUser.password = user.password;
+    console.log("Mot de passe inclus dans la mise à jour");
+  } else {
+    console.log("Mot de passe exclu de la mise à jour (non modifié)");
+  }
+
+  console.log("Données envoyées au serveur:", {
+    ...cleanUser,
+    password: cleanUser.password ? "[PRÉSENT]" : "[ABSENT]",
+  });
+
   const res = await fetch(`${API_URL}/users/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(user),
+    body: JSON.stringify(cleanUser),
   });
 
   if (!res.ok) {
     const text = await res.text();
     console.error("Erreur updateUser:", res.status, text);
-    throw new Error("Impossible de mettre à jour l’utilisateur");
+    throw new Error("Impossible de mettre à jour l'utilisateur");
   }
 
   return res.json();

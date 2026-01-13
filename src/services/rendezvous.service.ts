@@ -39,14 +39,37 @@ export async function getRendezVousById(id: number) {
 }
 
 export async function updateRendezVous(id: number, updateData: Partial<RendezVousPayload>) {
-  const res = await fetch(`${API_URL}/rendezvous/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updateData),
-  });
+  try {
+    console.log(`Mise à jour du rendez-vous ${id}:`, updateData);
+    
+    const res = await fetch(`${API_URL}/rendezvous/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updateData),
+    });
 
-  if (!res.ok) throw new Error("Impossible de mettre à jour le rendez-vous");
-  return res.json();
+    if (!res.ok) {
+      let errorMessage = "Impossible de mettre à jour le rendez-vous";
+      try {
+        const errorData = await res.json();
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch {
+        const errorText = await res.text();
+        if (errorText) {
+          errorMessage = errorText;
+        }
+      }
+      console.error("Erreur updateRendezVous:", res.status, errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    const data = await res.json();
+    console.log("Rendez-vous mis à jour avec succès:", data);
+    return data;
+  } catch (error) {
+    console.error("Erreur dans updateRendezVous:", error);
+    throw error;
+  }
 }
 
 export async function deleteRendezVous(id: number) {

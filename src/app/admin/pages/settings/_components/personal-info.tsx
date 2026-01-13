@@ -17,6 +17,8 @@ export function PersonalInfoForm() {
     role: "",
   });
 
+  const [originalPassword, setOriginalPassword] = useState<string>("********");
+
   // Charger le profil
   const loadProfile = async () => {
     try {
@@ -30,17 +32,20 @@ export function PersonalInfoForm() {
         return;
       }
 
+      console.log("Chargement du profil depuis la base de données...");
       const profile = await getProfile(token);
       setFormData({
         ...profile,
         password: "********", // masquer le mot de passe
       });
-    } catch (err) {
-      console.error(err);
+      setOriginalPassword("********"); // Stocker le mot de passe masqué comme référence
+      console.log("Profil chargé avec succès depuis la base de données");
+    } catch (err: any) {
+      console.error("Erreur lors du chargement du profil:", err);
       Swal.fire({
         icon: "error",
         title: "Erreur",
-        text: "Impossible de charger le profil",
+        text: err?.message || "Impossible de charger le profil depuis la base de données",
       });
     }
   };
@@ -63,11 +68,32 @@ export function PersonalInfoForm() {
       return;
     }
 
-    // Si le mot de passe est "********", on ne l’envoie pas pour éviter de l’écraser
-    const submitData = {
-      ...formData,
-      password: formData.password === "********" ? undefined : formData.password,
+    // Préparer les données à envoyer
+    // Exclure le mot de passe sauf s'il a été explicitement modifié
+    const submitData: any = {
+      name: formData.name,
+      lastName: formData.lastName,
+      email: formData.email,
+      role: formData.role,
     };
+
+    // Ne inclure le mot de passe QUE s'il a été modifié (pas "********" et pas vide)
+    const passwordChanged = 
+      formData.password !== "********" && 
+      formData.password.trim() !== "" &&
+      formData.password !== originalPassword;
+
+    if (passwordChanged) {
+      submitData.password = formData.password;
+      console.log("Mot de passe modifié - sera mis à jour dans la base de données");
+    } else {
+      console.log("Mot de passe non modifié - ne sera pas envoyé au serveur");
+    }
+
+    console.log("Mise à jour du profil dans la base de données...", {
+      ...submitData,
+      password: passwordChanged ? "[MODIFIÉ]" : "[NON INCLUS]",
+    });
 
     const updatedRaw = await updateUser(token, formData.id, submitData);
 
@@ -79,18 +105,20 @@ export function PersonalInfoForm() {
     };
 
     setFormData(updated);
+    setOriginalPassword("********"); // Réinitialiser la référence du mot de passe
+    console.log("Profil mis à jour avec succès dans la base de données");
 
     Swal.fire({
       icon: "success",
       title: "Succès",
-      text: "Profil mis à jour avec succès",
+      text: "Profil mis à jour avec succès dans la base de données",
     });
-  } catch (err) {
-    console.error(err);
+  } catch (err: any) {
+    console.error("Erreur lors de la mise à jour du profil:", err);
     Swal.fire({
       icon: "error",
       title: "Erreur",
-      text: "Mise à jour échouée",
+      text: err?.message || "Mise à jour échouée",
     });
   }
 };
@@ -104,7 +132,7 @@ export function PersonalInfoForm() {
   };
 
   return (
-    <ShowcaseSection title="Personal Information" className="!p-7">
+    <ShowcaseSection title="Informations Personnelles" className="!p-7">
       <form onSubmit={handleSubmit}>
         <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
           <InputGroup

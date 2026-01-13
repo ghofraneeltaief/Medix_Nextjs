@@ -24,7 +24,7 @@ type RendezVous = {
 
 const CalendarBox = () => {
   const [showModal, setShowModal] = useState(false);
-  const [editingRdvIndex, setEditingRdvIndex] = useState<number | null>(null);
+  const [editingRdvId, setEditingRdvId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     nom_patient: "",
     date: "",
@@ -69,8 +69,8 @@ setRendezvous(
     nom_patient: r.nom_patient,
     date: r.date,
     heure: r.heure,
-    id_acte: r.acte?.Id_Acte,      // 👈 ICI
-    id_medecin: r.medecin?.id,     // 👈 ICI
+    id_acte: r.acte?.Id_Acte || r.id_acte,
+    id_medecin: r.medecin?.id || r.id_medecin,
   }))
 );
 
@@ -115,20 +115,58 @@ setRendezvous(
       id_acte: "",
       id_medecin: "",
     });
-    setEditingRdvIndex(null);
+    setEditingRdvId(null);
     setShowModal(true);
   };
 
   // Click sur RDV pour modification
-  const handleRdvClick = (rdv: RendezVous, index: number) => {
-    setFormData({
-      nom_patient: rdv.nom_patient,
-      date: rdv.date,
-      heure: rdv.heure,
-      id_acte: String(rdv.id_acte),
-      id_medecin: String(rdv.id_medecin),
+  const handleRdvClick = (rdv: RendezVous) => {
+    if (!rdv.id) {
+      Swal.fire({
+        icon: "error",
+        title: "Erreur",
+        text: "Impossible de modifier ce rendez-vous (ID manquant)",
+      });
+      return;
+    }
+
+    // Trouver le rendez-vous dans la liste pour s'assurer d'avoir les bonnes valeurs
+    const fullRdv = rendezvous.find((r) => r.id === rdv.id);
+    if (!fullRdv) {
+      Swal.fire({
+        icon: "error",
+        title: "Erreur",
+        text: "Rendez-vous introuvable",
+      });
+      return;
+    }
+
+    console.log("Données du rendez-vous à modifier:", {
+      fullRdv,
+      id_acte: fullRdv.id_acte,
+      id_medecin: fullRdv.id_medecin,
+      actes: actes,
+      medecins: medecins,
     });
-    setEditingRdvIndex(index);
+
+    // Vérifier que les IDs sont valides
+    if (!fullRdv.id_acte || !fullRdv.id_medecin) {
+      Swal.fire({
+        icon: "error",
+        title: "Erreur",
+        text: `Données incomplètes: id_acte=${fullRdv.id_acte}, id_medecin=${fullRdv.id_medecin}. Veuillez recharger la page.`,
+      });
+      return;
+    }
+
+    setFormData({
+      nom_patient: fullRdv.nom_patient || "",
+      date: fullRdv.date,
+      heure: fullRdv.heure,
+      id_acte: String(fullRdv.id_acte),
+      id_medecin: String(fullRdv.id_medecin),
+    });
+    setEditingRdvId(fullRdv.id || null);
     setShowModal(true);
   };
 
@@ -140,98 +178,232 @@ setRendezvous(
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
- const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const payload: RendezVous = {
-    nom_patient: formData.nom_patient,
-    date: formData.date,
-    heure: formData.heure,
-    id_acte: Number(formData.id_acte),
-    id_medecin: Number(formData.id_medecin),
+    // Validation
+    if (!formData.nom_patient.trim()) {
+      Swal.fire({
+        icon: "warning",
+        title: "Champ requis",
+        text: "Veuillez entrer le nom du patient",
+      });
+      return;
+    }
+
+    if (!formData.heure) {
+      Swal.fire({
+        icon: "warning",
+        title: "Champ requis",
+        text: "Veuillez sélectionner une heure",
+      });
+      return;
+    }
+
+    // Validation de l'heure (entre 8h et 17h, ou 13h max le samedi)
+    const [hours, minutes] = formData.heure.split(":").map(Number);
+    const hourValue = hours + minutes / 60;
+    const isSaturday = new Date(formData.date).getDay() === 6;
+    const maxHour = isSaturday ? 13 : 17;
+
+    if (hourValue < 8 || hourValue > maxHour) {
+      Swal.fire({
+        icon: "error",
+        title: "Heure invalide",
+        text: `L'heure doit être entre 8h et ${maxHour}h${isSaturday ? " (samedi)" : ""}`,
+      });
+      return;
+    }
+
+    if (!formData.id_acte) {
+      Swal.fire({
+        icon: "warning",
+        title: "Champ requis",
+        text: "Veuillez sélectionner un acte",
+      });
+      return;
+    }
+
+    if (!formData.id_medecin) {
+      Swal.fire({
+        icon: "warning",
+        title: "Champ requis",
+        text: "Veuillez sélectionner un médecin",
+      });
+      return;
+    }
+
+    const idActe = Number(formData.id_acte);
+    const idMedecin = Number(formData.id_medecin);
+
+    if (isNaN(idActe) || idActe <= 0 || isNaN(idMedecin) || idMedecin <= 0) {
+      Swal.fire({
+        icon: "error",
+        title: "Erreur",
+        text: "Veuillez sélectionner un acte et un médecin valides",
+      });
+      return;
+    }
+
+    const payload: RendezVous = {
+      nom_patient: formData.nom_patient.trim(),
+      date: formData.date,
+      heure: formData.heure,
+      id_acte: idActe,
+      id_medecin: idMedecin,
+    };
+
+    try {
+      if (editingRdvId !== null) {
+        // 🔁 MODIFICATION
+        console.log("Tentative de modification du rendez-vous:", {
+          id: editingRdvId,
+          payload,
+        });
+        
+        await updateRendezVous(editingRdvId, payload);
+
+        // Recharger les données
+        const rdvs = await getRendezVous();
+        setRendezvous(
+          rdvs.map((r: any) => ({
+            id: r.id,
+            nom_patient: r.nom_patient,
+            date: r.date,
+            heure: r.heure,
+            id_acte: r.acte?.Id_Acte || r.id_acte,
+            id_medecin: r.medecin?.id || r.id_medecin,
+          }))
+        );
+
+        Swal.fire({
+          icon: "success",
+          title: "Modifié",
+          text: "Le rendez-vous a été modifié avec succès",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+
+        setShowModal(false);
+        setEditingRdvId(null);
+        setFormData({
+          nom_patient: "",
+          date: "",
+          heure: "",
+          id_acte: "",
+          id_medecin: "",
+        });
+      } else {
+        // ➕ AJOUT
+        await createRendezVous(payload);
+
+        // Recharger les données
+        const rdvs = await getRendezVous();
+        setRendezvous(
+          rdvs.map((r: any) => ({
+            id: r.id,
+            nom_patient: r.nom_patient,
+            date: r.date,
+            heure: r.heure,
+            id_acte: r.acte?.Id_Acte || r.id_acte,
+            id_medecin: r.medecin?.id || r.id_medecin,
+          }))
+        );
+
+        Swal.fire({
+          icon: "success",
+          title: "Ajouté",
+          text: "Le rendez-vous a été ajouté avec succès",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+
+        setShowModal(false);
+        setFormData({
+          nom_patient: "",
+          date: "",
+          heure: "",
+          id_acte: "",
+          id_medecin: "",
+        });
+      }
+    } catch (err: any) {
+      console.error("Erreur:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Erreur",
+        text: err?.message || "Une erreur est survenue",
+      });
+    }
   };
-
-  try {
-    if (editingRdvIndex !== null) {
-      // 🔁 MODIFICATION
-      const rdvToUpdate = rendezvous[editingRdvIndex];
-      await updateRendezVous(rdvToUpdate.id!, payload);
-
-      await Swal.fire({
-        icon: "success",
-        title: "Rendez-vous modifié",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-
-      window.location.reload(); // 🔄
-    } else {
-      // ➕ AJOUT
-      await createRendezVous(payload);
-
-      await Swal.fire({
-        icon: "success",
-        title: "Rendez-vous ajouté",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-
-      window.location.reload(); // 🔄
-    }
-  } catch (err) {
-    Swal.fire({
-      icon: "error",
-      title: "Erreur",
-      text: "Une erreur est survenue",
-    });
-    console.error(err);
-  }
-};
   const handleDelete = async () => {
-  if (editingRdvIndex === null) return;
+    if (editingRdvId === null) return;
 
-  const rdvToDelete = rendezvous[editingRdvIndex];
-
-  const result = await Swal.fire({
-    title: "Êtes-vous sûr ?",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
-    confirmButtonText: "Oui, supprimer",
-    cancelButtonText: "Annuler",
-  });
-
-  if (!result.isConfirmed) return;
-
-  try {
-    if (rdvToDelete.id) {
-      await deleteRendezVous(rdvToDelete.id);
+    const rdvToDelete = rendezvous.find((r) => r.id === editingRdvId);
+    if (!rdvToDelete) {
+      Swal.fire({
+        icon: "error",
+        title: "Erreur",
+        text: "Rendez-vous introuvable",
+      });
+      return;
     }
 
-    setRendezvous((prev) =>
-      prev.filter((_, i) => i !== editingRdvIndex)
-    );
-
-    setShowModal(false);
-    setEditingRdvIndex(null);
-
-    Swal.fire({
-      icon: "success",
-      title: "Supprimé",
-      text: "Le rendez-vous a été supprimé",
-      timer: 2000,
-      showConfirmButton: false,
+    const result = await Swal.fire({
+      title: "Êtes-vous sûr ?",
+      text: `Voulez-vous vraiment supprimer le rendez-vous de "${rdvToDelete.nom_patient}" ?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Oui, supprimer",
+      cancelButtonText: "Annuler",
     });
-  } catch (err) {
-    Swal.fire({
-      icon: "error",
-      title: "Erreur",
-      text: "Impossible de supprimer le rendez-vous",
-    });
-    console.error(err);
-  }
-};
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await deleteRendezVous(editingRdvId);
+
+      // Recharger les données
+      const rdvs = await getRendezVous();
+      setRendezvous(
+        rdvs.map((r: any) => ({
+          id: r.id,
+          nom_patient: r.nom_patient,
+          date: r.date,
+          heure: r.heure,
+          id_acte: r.acte?.Id_Acte || r.id_acte,
+          id_medecin: r.medecin?.id || r.id_medecin,
+        }))
+      );
+
+      setShowModal(false);
+      setEditingRdvId(null);
+      setFormData({
+        nom_patient: "",
+        date: "",
+        heure: "",
+        id_acte: "",
+        id_medecin: "",
+      });
+
+      Swal.fire({
+        icon: "success",
+        title: "Supprimé",
+        text: "Le rendez-vous a été supprimé avec succès",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (err: any) {
+      console.error("Erreur:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Erreur",
+        text: err?.message || "Impossible de supprimer le rendez-vous",
+      });
+    }
+  };
 
   const getRdvForDay = (day: number) => {
     const dayStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -315,39 +487,117 @@ setRendezvous(
                   return (
                     <td
                       key={col}
-                      className={`relative h-28 border border-stroke p-1 text-center ${
+                      className={`relative h-32 border border-stroke p-1.5 text-center ${
                         isPast || isDimanche
-                          ? "cursor-not-allowed bg-gray-200"
-                          : "cursor-pointer hover:bg-gray-100"
-                      } dark:border-dark-3 dark:hover:bg-dark-2`}
+                          ? "cursor-not-allowed bg-gray-100 dark:bg-dark-2 opacity-60"
+                          : "cursor-pointer hover:bg-primary/5 dark:hover:bg-primary/10"
+                      } dark:border-dark-3 transition-colors`}
                       onClick={() =>
                         !isPast && !isDimanche && handleDayClick(day)
                       }
                     >
-                      <span className="font-medium text-dark dark:text-white">
+                      <span className={`block font-semibold mb-1 ${
+                        isPast || isDimanche
+                          ? "text-gray-400 dark:text-gray-600"
+                          : "text-dark dark:text-white"
+                      }`}>
                         {day}
                       </span>
-                      {getRdvForDay(day).map((r, idx) => {
-                        const rdvHour = Number(r.heure.split(":")[0]);
-                        const disableRdv =
-                          dayDate.getDay() === 6 && rdvHour > 13;
-                        return (
-                          <span
-                            key={idx}
-                            className={`mt-1 block rounded p-1 text-xs ${disableRdv ? "bg-gray-300 text-gray-500" : "bg-primary/20 text-primary"}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              !disableRdv &&
-                                handleRdvClick(
-                                  r,
-                                  rendezvous.findIndex((rv) => rv === r),
+                      <div className="space-y-0.5 max-h-20 overflow-y-auto">
+                        {(() => {
+                          const rdvsForDay = getRdvForDay(day).sort((a, b) => 
+                            a.heure.localeCompare(b.heure)
+                          );
+                          const maxVisible = 4;
+                          const visibleRdvs = rdvsForDay.slice(0, maxVisible);
+                          const remainingCount = rdvsForDay.length - maxVisible;
+
+                          return (
+                            <>
+                              {visibleRdvs.map((r) => {
+                                const rdvHour = Number(r.heure.split(":")[0]);
+                                const disableRdv =
+                                  dayDate.getDay() === 6 && rdvHour > 13;
+                                return (
+                                  <span
+                                    key={r.id}
+                                    className={`block rounded-md px-1.5 py-0.5 text-[10px] font-medium truncate transition-colors ${
+                                      disableRdv
+                                        ? "bg-gray-200 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400"
+                                        : "bg-primary/20 text-primary hover:bg-primary/30 cursor-pointer dark:bg-primary/30 dark:text-primary"
+                                    }`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      !disableRdv && handleRdvClick(r);
+                                    }}
+                                    title={`${r.nom_patient} - ${r.heure}`}
+                                  >
+                                    <span className="font-semibold">{r.nom_patient}</span>
+                                    <span className="block text-[9px] opacity-80">{r.heure}</span>
+                                  </span>
                                 );
-                            }}
-                          >
-                            {r.nom_patient} ({r.heure})
-                          </span>
-                        );
-                      })}
+                              })}
+                              {remainingCount > 0 && (
+                                <button
+                                  type="button"
+                                  className="w-full rounded-md px-1.5 py-0.5 text-[10px] font-semibold bg-gray-300 text-gray-700 dark:bg-gray-600 dark:text-gray-300 cursor-pointer hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const rdvsForDay = getRdvForDay(day).sort((a, b) => 
+                                      a.heure.localeCompare(b.heure)
+                                    );
+                                    Swal.fire({
+                                      title: `Rendez-vous du ${day} ${monthNames[currentMonth]} ${currentYear}`,
+                                      html: `
+                                        <div class="text-left max-h-96 overflow-y-auto">
+                                          ${rdvsForDay.map((r) => {
+                                            const rdvHour = Number(r.heure.split(":")[0]);
+                                            const disableRdv = dayDate.getDay() === 6 && rdvHour > 13;
+                                            const acteNom = actes.find(a => a.id === r.id_acte)?.nom || "Acte inconnu";
+                                            const medecinNom = medecins.find(m => m.id === r.id_medecin)?.nom || "Médecin inconnu";
+                                            return `
+                                              <div class="mb-3 p-3 border rounded-lg ${disableRdv ? 'bg-gray-100 border-gray-300' : 'bg-primary/5 border-primary/20'}">
+                                                <div class="font-semibold text-primary">${r.nom_patient}</div>
+                                                <div class="text-sm text-gray-600 mt-1">
+                                                  <div>⏰ ${r.heure}</div>
+                                                  <div>🏥 ${acteNom}</div>
+                                                  <div>👨‍⚕️ ${medecinNom}</div>
+                                                </div>
+                                                ${disableRdv ? '<div class="text-xs text-red-500 mt-1">⚠️ Samedi après 13h</div>' : ''}
+                                                <button 
+                                                  onclick="window.handleRdvEdit && window.handleRdvEdit(${r.id}); return false;"
+                                                  class="mt-2 px-3 py-1 bg-primary text-white rounded text-xs hover:bg-primary/90 cursor-pointer"
+                                                >
+                                                  Modifier
+                                                </button>
+                                              </div>
+                                            `;
+                                          }).join('')}
+                                        </div>
+                                      `,
+                                      width: "600px",
+                                      showCloseButton: true,
+                                      confirmButtonText: "Fermer",
+                                      didOpen: () => {
+                                        (window as any).handleRdvEdit = (id: number) => {
+                                          const rdv = rendezvous.find(r => r.id === id);
+                                          if (rdv) {
+                                            Swal.close();
+                                            handleRdvClick(rdv);
+                                          }
+                                        };
+                                      },
+                                    });
+                                  }}
+                                  title={`Cliquez pour voir les ${remainingCount} rendez-vous supplémentaires`}
+                                >
+                                  +{remainingCount} plus
+                                </button>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </div>
                     </td>
                   );
                 })}
@@ -362,7 +612,7 @@ setRendezvous(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg dark:bg-gray-dark">
             <h2 className="mb-4 text-xl font-semibold text-dark dark:text-white">
-              {editingRdvIndex !== null
+              {editingRdvId !== null
                 ? "Modifier le rendez-vous"
                 : "Ajouter un rendez-vous"}
             </h2>
@@ -382,17 +632,39 @@ setRendezvous(
 
               <div>
                 <label className="block font-medium">Heure</label>
-                <input
-                  type="time"
-                  name="heure"
-                  value={formData.heure}
-                  onChange={handleChange}
-                  className="w-full rounded border border-gray-300 p-2"
-                  required
-                  max={
-                    new Date(formData.date).getDay() === 6 ? "13:00" : undefined
-                  }
-                />
+                {(() => {
+                  // Vérifier si l'heure actuelle est dans la plage valide (8h-17h)
+                  const isHourInRange = formData.heure ? (() => {
+                    const [hours] = formData.heure.split(":").map(Number);
+                    return hours >= 8 && hours <= 17;
+                  })() : true;
+                  
+                  const maxHour = new Date(formData.date).getDay() === 6 ? "13:00" : "17:00";
+                  
+                  return (
+                    <>
+                      <input
+                        type="time"
+                        name="heure"
+                        value={formData.heure}
+                        onChange={handleChange}
+                        className={`w-full rounded border p-2 ${
+                          formData.heure && !isHourInRange 
+                            ? "border-red-300 bg-red-50" 
+                            : "border-gray-300"
+                        }`}
+                        required
+                        min="08:00"
+                        max={maxHour}
+                      />
+                      {formData.heure && !isHourInRange && (
+                        <p className="mt-1 text-xs text-red-500">
+                          ⚠️ L'heure doit être entre 8h et 17h
+                        </p>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
 
               <div>
@@ -432,27 +704,37 @@ setRendezvous(
               </div>
 
               <div className="mt-4 flex justify-end gap-3">
-                {editingRdvIndex !== null && (
+                {editingRdvId !== null && (
                   <button
                     type="button"
                     onClick={handleDelete}
-                    className="rounded bg-red-500 px-4 py-2 text-white hover:bg-red-600"
+                    className="rounded-lg bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-600"
                   >
                     Supprimer
                   </button>
                 )}
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
-                  className="rounded bg-gray-200 px-4 py-2 text-dark hover:bg-gray-300"
+                  onClick={() => {
+                    setShowModal(false);
+                    setEditingRdvId(null);
+                    setFormData({
+                      nom_patient: "",
+                      date: "",
+                      heure: "",
+                      id_acte: "",
+                      id_medecin: "",
+                    });
+                  }}
+                  className="rounded-lg border border-stroke px-4 py-2 font-medium text-dark transition-colors hover:bg-gray-50 dark:border-dark-3 dark:text-white dark:hover:bg-dark-2"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="rounded bg-primary px-4 py-2 text-white hover:bg-primary/90"
+                  className="rounded-lg bg-primary px-4 py-2 font-medium text-white transition-colors hover:bg-primary/90"
                 >
-                  {editingRdvIndex !== null ? "Modifier" : "Enregistrer"}
+                  {editingRdvId !== null ? "Modifier" : "Enregistrer"}
                 </button>
               </div>
             </form>
