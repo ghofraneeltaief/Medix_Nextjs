@@ -2,6 +2,7 @@ import Signin from "@/components/Signin";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import RedirectIfAuthenticated from "@/components/Signin/RedirectIfAuthenticated";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function SignIn() {
   return (
-    <>
+    <RedirectIfAuthenticated>
       <div className="rounded-[10px] bg-white shadow-1 dark:bg-gray-dark dark:shadow-card">
         <div className="flex flex-wrap items-center">
           <div className="w-full xl:w-1/2">
@@ -33,6 +34,6 @@ export default function SignIn() {
           </div>
         </div>
       </div>
-    </>
+    </RedirectIfAuthenticated>
   );
 }

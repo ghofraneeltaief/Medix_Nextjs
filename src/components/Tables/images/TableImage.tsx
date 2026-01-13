@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Imagerie } from "@/services/imageService";
+import { MedicalImageViewer } from "@/components/MedicalImageViewer/MedicalImageViewer";
 
 export interface RendezVousAvecImagerie {
   rendezVousId: number;
@@ -34,6 +35,12 @@ interface ImagerieTableProps {
 
 export function TableImagerie({ data, onEdit, onDelete, onAddForRendezVous }: ImagerieTableProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [previewData, setPreviewData] = useState<{
+    url: string;
+    patientName?: string;
+    date?: string;
+    acte?: string;
+  } | null>(null);
 
   return (
     <div>
@@ -72,10 +79,17 @@ export function TableImagerie({ data, onEdit, onDelete, onAddForRendezVous }: Im
               <TableCell>
                 {item.imagerie?.urlImage ? (
                   <button
-                    onClick={() =>
-                      setPreviewImage(`http://localhost:4000${item.imagerie!.urlImage}`)
-                    }
+                    onClick={() => {
+                      const imageUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${item.imagerie!.urlImage}`;
+                      setPreviewData({
+                        url: imageUrl,
+                        patientName: item.rendezVous?.nom_patient,
+                        date: item.rendezVous?.date,
+                        acte: item.rendezVous?.acte?.Nom_Acte,
+                      });
+                    }}
                     className="hover:text-primary"
+                    title="Visualiser l'image"
                   >
                     <EyeIcon />
                   </button>
@@ -120,30 +134,15 @@ export function TableImagerie({ data, onEdit, onDelete, onAddForRendezVous }: Im
         </TableBody>
       </Table>
 
-      {/* Modal Preview */}
-      {previewImage && (
-        <div
-          onClick={() => setPreviewImage(null)}
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 cursor-pointer"
-        >
-          <div className="relative">
-            {/* Bouton fermer X */}
-            <button
-              onClick={() => setPreviewImage(null)}
-              className="absolute top-2 right-2 text-white text-xl font-bold z-50"
-            >
-              &times;
-            </button>
-
-            {/* Image */}
-            <img
-              src={previewImage}
-              alt="Aperçu imagerie médicale"
-              className="max-w-[90vw] max-h-[90vh] object-contain rounded shadow-lg"
-              onClick={(e) => e.stopPropagation()} // empêcher fermeture si clic sur l’image
-            />
-          </div>
-        </div>
+      {/* Visualiseur d'images médicales */}
+      {previewData && (
+        <MedicalImageViewer
+          imageUrl={previewData.url}
+          patientName={previewData.patientName}
+          date={previewData.date}
+          acte={previewData.acte}
+          onClose={() => setPreviewData(null)}
+        />
       )}
     </div>
   );

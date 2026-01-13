@@ -37,7 +37,13 @@ const [user, setUser] = useState<{name: string, email: string,img: "/images/user
   // ✅ Fonction de logout
   const handleLogout = () => {
     localStorage.removeItem("token"); // supprimer JWT
+    localStorage.removeItem("role"); // supprimer le rôle
     localStorage.removeItem("remember_me"); // si tu l'utilises
+    
+    // Supprimer les cookies
+    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    
     router.push("/"); // redirige vers page de login
   };
   return (

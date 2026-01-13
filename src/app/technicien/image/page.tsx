@@ -111,7 +111,55 @@ export default function ImageriesPage() {
     
     try {
       if (editImagerie && editImagerie.id != null) {
-        const updated = await updateImagerie(editImagerie.id, newImagerie);
+        // Pour la modification, on peut modifier l'image via upload d'un nouveau fichier
+        // Le type (acte) et le rendez-vous ne peuvent pas être modifiés
+        
+        // Récupérer le rendezVousId depuis l'imagerie existante
+        let rendezVousId = editImagerie.rendezVousId || editImagerie.rendezVous?.id || newImagerie.rendezVousId;
+        
+        // Si toujours pas trouvé, chercher dans la liste des rendez-vous avec imageries
+        if (!rendezVousId || rendezVousId === 0) {
+          const rvAvecImg = rendezVousAvecImageries.find(
+            (rv) => rv.imagerie?.id === editImagerie.id
+          );
+          rendezVousId = rvAvecImg?.rendezVousId;
+        }
+        
+        if (!rendezVousId || rendezVousId === 0) {
+          Swal.fire({
+            icon: "error",
+            title: "Erreur",
+            text: "Impossible de trouver le rendez-vous associé à cette imagerie",
+          });
+          return;
+        }
+        
+        // Si un nouveau fichier est sélectionné, on doit l'uploader
+        if (selectedFile) {
+          // Uploader le nouveau fichier pour obtenir l'URL
+          const uploaded = await uploadAndSaveImagerie(selectedFile, {
+            type: editImagerie.type || currentRendezVous?.rendezVous?.acte?.Nom_Acte || "",
+            rendezVousId: rendezVousId,
+          });
+          
+          // Mettre à jour l'ancienne imagerie avec la nouvelle URL
+          await updateImagerie(editImagerie.id, {
+            urlImage: uploaded.urlImage,
+          });
+          
+          // Supprimer la nouvelle imagerie créée (on ne garde que la mise à jour de l'existante)
+          await deleteImagerie(uploaded.id!);
+        } else {
+          // Si pas de nouveau fichier, vérifier si l'URL a changé
+          // Note: dans le formulaire actuel, on n'a pas de champ URL pour la modification
+          // Donc on ne fait rien si pas de nouveau fichier
+          Swal.fire({
+            icon: "info",
+            title: "Aucune modification",
+            text: "Veuillez sélectionner un nouveau fichier pour modifier l'image",
+          });
+          return;
+        }
         // Recharger les données pour mettre à jour la liste
         const [rendezVousData, imageriesData] = await Promise.all([
           getRendezVous(),
@@ -138,7 +186,7 @@ export default function ImageriesPage() {
         Swal.fire({
           icon: "success",
           title: "Modifiée",
-          text: `L'imagerie "${newImagerie.type}" a été modifiée avec succès`,
+          text: `L'imagerie a été modifiée avec succès`,
         });
       } else {
         // Si un fichier est sélectionné, utiliser l'upload
@@ -364,6 +412,9 @@ export default function ImageriesPage() {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 setSelectedFile(null);
+                                if (previewUrl && previewUrl.startsWith('blob:')) {
+                                  URL.revokeObjectURL(previewUrl);
+                                }
                                 setPreviewUrl(null);
                                 const input = document.getElementById("imageUpload") as HTMLInputElement;
                                 if (input) input.value = "";
@@ -372,6 +423,15 @@ export default function ImageriesPage() {
                             >
                               ×
                             </button>
+                          </div>
+                        ) : editImagerie?.urlImage ? (
+                          <div className="relative w-full max-w-xs">
+                            <img
+                              src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${editImagerie.urlImage}`}
+                              alt="Image actuelle"
+                              className="w-full h-auto rounded-lg max-h-48 object-contain"
+                            />
+                            <p className="mt-2 text-xs text-gray-500">Image actuelle - Cliquez pour la remplacer</p>
                           </div>
                         ) : (
                           <>

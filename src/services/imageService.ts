@@ -79,17 +79,43 @@ export async function updateImagerie(
   data: Partial<{
     type: string;
     urlImage: string;
-    compteRenduId: number;
-    rendezVousId: number;
+    compteRenduId?: number;
+    rendezVousId?: number;
   }>
 ): Promise<Imagerie> {
+  // Ne pas inclure les champs vides ou undefined
+  const payload: any = {};
+  
+  if (data.type && data.type.trim() !== "") {
+    payload.type = data.type;
+  }
+  if (data.urlImage && data.urlImage.trim() !== "") {
+    payload.urlImage = data.urlImage;
+  }
+  if (data.compteRenduId && data.compteRenduId > 0) {
+    payload.compteRenduId = data.compteRenduId;
+  }
+  if (data.rendezVousId && data.rendezVousId > 0) {
+    payload.rendezVousId = data.rendezVousId;
+  }
+
   const res = await fetch(`${API_URL}/imageries/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
 
-  if (!res.ok) throw new Error("Impossible de mettre à jour l’imagerie");
+  if (!res.ok) {
+    let errorMessage = "Impossible de mettre à jour l'imagerie";
+    try {
+      const errorData = await res.json();
+      errorMessage = errorData.message || errorData.error || errorMessage;
+    } catch {
+      const errorText = await res.text();
+      errorMessage = errorText || errorMessage;
+    }
+    throw new Error(errorMessage);
+  }
   return res.json();
 }
 

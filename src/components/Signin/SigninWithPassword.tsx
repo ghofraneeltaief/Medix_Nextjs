@@ -1,14 +1,15 @@
 "use client";
 import { EmailIcon, PasswordIcon } from "@/assets/icons";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import InputGroup from "../FormElements/InputGroup";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { login } from "@/services/authService";
 import { Alert } from "../ui-elements/alert";
 
 export default function SigninWithPassword() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [data, setData] = useState({
     email: "",
     password: "",
@@ -37,6 +38,10 @@ export default function SigninWithPassword() {
       // 🔑 ici tu récupères ton token et role
       localStorage.setItem("token", res.access_token);
       localStorage.setItem("role", res.role);
+      
+      // Stocker aussi dans les cookies pour le middleware
+      document.cookie = `token=${res.access_token}; path=/; max-age=86400; SameSite=Lax`;
+      document.cookie = `role=${res.role}; path=/; max-age=86400; SameSite=Lax`;
       // alert de succès
       setAlert({
         variant: "success",
@@ -44,25 +49,30 @@ export default function SigninWithPassword() {
         description: "Vous êtes connecté avec succès.",
       });
 
-      // 🔹 Redirection selon rôle
-      switch (res.role) {
-        case "admin":
-          router.push("/admin");
-          break;
-        case "assistante":
-          router.push("/assistante/calendar");
-          break;
-        case "médecin":
-          router.push("/medecin-externe/image");
-          break;
-        case "médecin radiologue":
-          router.push("/radiologue/image");
-          break;
-        case "technicien":
-          router.push("/technicien/image");
-          break;
-        default:
-          router.push("/"); // fallback
+      // 🔹 Redirection selon rôle ou vers la page demandée
+      const redirectUrl = searchParams.get("redirect");
+      if (redirectUrl) {
+        router.push(decodeURIComponent(redirectUrl));
+      } else {
+        switch (res.role) {
+          case "admin":
+            router.push("/admin");
+            break;
+          case "assistante":
+            router.push("/assistante/calendar");
+            break;
+          case "médecin":
+            router.push("/medecin-externe/image");
+            break;
+          case "médecin radiologue":
+            router.push("/radiologue/image");
+            break;
+          case "technicien":
+            router.push("/technicien/image");
+            break;
+          default:
+            router.push("/"); // fallback
+        }
       }
     } catch (err: any) {
       setAlert({
