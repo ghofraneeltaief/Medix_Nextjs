@@ -4,9 +4,22 @@ export interface Imagerie {
   id?: number;
   type: string;
   urlImage: string;
-  compteRenduId: number;
-  rendezVousId: number;
+  compteRenduId?: number;
+  rendezVousId?: number;
+
+  rendezVous?: {
+    id?: number;
+    nom_patient: string;
+    date: string;
+    heure: string;
+    acte?: {
+      Nom_Acte: string;
+    };
+  };
 }
+
+
+
 
 // Récupérer toutes les imageries
 export async function getImageries(): Promise<Imagerie[]> {
@@ -26,16 +39,37 @@ export async function getImagerieById(id: number): Promise<Imagerie> {
 export async function createImagerie(data: {
   type: string;
   urlImage: string;
-  compteRenduId: number;
+  compteRenduId?: number;
   rendezVousId: number;
 }): Promise<Imagerie> {
+  // Ne pas inclure compteRenduId si il est 0 ou undefined
+  const payload: any = {
+    type: data.type,
+    urlImage: data.urlImage,
+    rendezVousId: data.rendezVousId,
+  };
+  
+  if (data.compteRenduId && data.compteRenduId > 0) {
+    payload.compteRenduId = data.compteRenduId;
+  }
+
   const res = await fetch(`${API_URL}/imageries`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
 
-  if (!res.ok) throw new Error("Impossible de créer l’imagerie");
+  if (!res.ok) {
+    let errorMessage = "Impossible de créer l'imagerie";
+    try {
+      const errorData = await res.json();
+      errorMessage = errorData.message || errorData.error || errorMessage;
+    } catch {
+      const errorText = await res.text();
+      errorMessage = errorText || errorMessage;
+    }
+    throw new Error(errorMessage);
+  }
   return res.json();
 }
 
@@ -65,6 +99,43 @@ export async function deleteImagerie(id: number): Promise<boolean> {
     method: "DELETE",
   });
 
-  if (!res.ok) throw new Error("Impossible de supprimer l’imagerie");
+  if (!res.ok) throw new Error("Impossible de supprimer l'imagerie");
   return true;
+}
+
+// Uploader et créer une imagerie
+export async function uploadAndSaveImagerie(
+  file: File,
+  data: {
+    type: string;
+    rendezVousId: number;
+    compteRenduId?: number;
+  }
+): Promise<Imagerie> {
+  const formData = new FormData();
+  formData.append("image", file);
+  formData.append("type", data.type);
+  formData.append("rendezVousId", data.rendezVousId.toString());
+  // Ne pas envoyer compteRenduId si il est 0 ou undefined
+  if (data.compteRenduId && data.compteRenduId > 0) {
+    formData.append("compteRenduId", data.compteRenduId.toString());
+  }
+
+  const res = await fetch(`${API_URL}/imageries/upload-and-save`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    let errorMessage = "Impossible d'uploader l'image";
+    try {
+      const errorData = await res.json();
+      errorMessage = errorData.message || errorData.error || errorMessage;
+    } catch {
+      const errorText = await res.text();
+      errorMessage = errorText || errorMessage;
+    }
+    throw new Error(errorMessage);
+  }
+  return res.json();
 }

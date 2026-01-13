@@ -9,22 +9,30 @@ import {
   createImagerie,
   updateImagerie,
   deleteImagerie,
+  uploadAndSaveImagerie,
 } from "@/services/imageService";
-import { Alert } from "@/components/ui-elements/alert";
-import { Button } from "@/components/ui-elements/button";
+import { getRendezVous } from "@/services/rendezvous.service";
 import { ShowcaseSection } from "@/components/Layouts/showcase-section";
 import InputGroup from "@/components/FormElements/InputGroup";
+import { UploadIcon } from "@/assets/icons";
+import Swal from "sweetalert2";
+
+// Structure pour un rendez-vous avec imagerie optionnelle
+export interface RendezVousAvecImagerie {
+  rendezVousId: number;
+  rendezVous: {
+    nom_patient: string;
+    date: string;
+    heure: string;
+    acte?: {
+      Nom_Acte: string;
+    };
+  };
+  imagerie: Imagerie | null;
+}
 
 export default function ImageriesPage() {
-  const [imageries, setImageries] = useState<Imagerie[]>([]);
-  const [alert, setAlert] = useState<{
-    variant: "error" | "success" | "warning";
-    title: string;
-    description: string;
-  } | null>(null);
-  const [imagerieToDelete, setImagerieToDelete] = useState<Imagerie | null>(
-    null,
-  );
+  const [rendezVousAvecImageries, setRendezVousAvecImageries] = useState<RendezVousAvecImagerie[]>([]);
 
   // 👉 modal ajout/édition
   const [showModal, setShowModal] = useState(false);
@@ -35,19 +43,47 @@ export default function ImageriesPage() {
     rendezVousId: 0,
   });
   const [editImagerie, setEditImagerie] = useState<Imagerie | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  // fetch des imageries
+  // fetch des rendez-vous et imageries
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await getImageries();
-        setImageries(data);
+        // Récupérer tous les rendez-vous et toutes les imageries
+        const [rendezVousData, imageriesData] = await Promise.all([
+          getRendezVous(),
+          getImageries(),
+        ]);
+
+        // Créer un map des imageries par rendezVousId
+        const imageriesMap = new Map<number, Imagerie>();
+        imageriesData.forEach((img: Imagerie) => {
+          const rvId = img.rendezVousId || img.rendezVous?.id;
+          if (rvId) {
+            imageriesMap.set(rvId, img);
+          }
+        });
+
+        // Combiner rendez-vous avec leurs imageries (ou null si pas d'imagerie)
+        const combined: RendezVousAvecImagerie[] = rendezVousData.map((rv: any) => ({
+          rendezVousId: rv.id,
+          rendezVous: {
+            nom_patient: rv.nom_patient,
+            date: rv.date,
+            heure: rv.heure,
+            acte: rv.acte ? { Nom_Acte: rv.acte.Nom_Acte } : undefined,
+          },
+          imagerie: imageriesMap.get(rv.id) || null,
+        }));
+
+        setRendezVousAvecImageries(combined);
       } catch (err) {
         console.error(err);
-        setAlert({
-          variant: "error",
+        Swal.fire({
+          icon: "error",
           title: "Erreur",
-          description: "Impossible de récupérer les imageries",
+          text: "Impossible de récupérer les données",
         });
       }
     };
@@ -62,36 +98,109 @@ export default function ImageriesPage() {
   // Ajouter ou éditer
   const handleSaveImagerie = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation : pour un nouvel ajout, il faut soit un fichier soit une URL
+    if (!editImagerie && !selectedFile && !newImagerie.urlImage) {
+      Swal.fire({
+        icon: "error",
+        title: "Erreur",
+        text: "Veuillez sélectionner un fichier image ou fournir une URL",
+      });
+      return;
+    }
+    
     try {
       if (editImagerie && editImagerie.id != null) {
         const updated = await updateImagerie(editImagerie.id, newImagerie);
-        setImageries(
-          imageries.map((i) => (i.id === editImagerie.id ? updated : i)),
-        );
-        setAlert({
-          variant: "success",
+        // Recharger les données pour mettre à jour la liste
+        const [rendezVousData, imageriesData] = await Promise.all([
+          getRendezVous(),
+          getImageries(),
+        ]);
+        const imageriesMap = new Map<number, Imagerie>();
+        imageriesData.forEach((img: Imagerie) => {
+          const rvId = img.rendezVousId || img.rendezVous?.id;
+          if (rvId) {
+            imageriesMap.set(rvId, img);
+          }
+        });
+        const combined: RendezVousAvecImagerie[] = rendezVousData.map((rv: any) => ({
+          rendezVousId: rv.id,
+          rendezVous: {
+            nom_patient: rv.nom_patient,
+            date: rv.date,
+            heure: rv.heure,
+            acte: rv.acte ? { Nom_Acte: rv.acte.Nom_Acte } : undefined,
+          },
+          imagerie: imageriesMap.get(rv.id) || null,
+        }));
+        setRendezVousAvecImageries(combined);
+        Swal.fire({
+          icon: "success",
           title: "Modifiée",
-          description: `L’imagerie "${newImagerie.type}" a été modifiée avec succès`,
+          text: `L'imagerie "${newImagerie.type}" a été modifiée avec succès`,
         });
       } else {
-        const created = await createImagerie(newImagerie);
-        setImageries([...imageries, created]);
-        setAlert({
-          variant: "success",
+        // Si un fichier est sélectionné, utiliser l'upload
+        if (selectedFile) {
+          await uploadAndSaveImagerie(selectedFile, {
+            type: currentRendezVous?.rendezVous?.acte?.Nom_Acte || newImagerie.type || "",
+            rendezVousId: newImagerie.rendezVousId || 0,
+          });
+        } else {
+          // Sinon, utiliser la méthode classique avec URL
+          await createImagerie({
+            type: currentRendezVous?.rendezVous?.acte?.Nom_Acte || newImagerie.type || "",
+            urlImage: newImagerie.urlImage,
+            rendezVousId: newImagerie.rendezVousId || 0,
+          });
+        }
+        // Recharger les données pour mettre à jour la liste
+        const [rendezVousData, imageriesData] = await Promise.all([
+          getRendezVous(),
+          getImageries(),
+        ]);
+        const imageriesMap = new Map<number, Imagerie>();
+        imageriesData.forEach((img: Imagerie) => {
+          const rvId = img.rendezVousId || img.rendezVous?.id;
+          if (rvId) {
+            imageriesMap.set(rvId, img);
+          }
+        });
+        const combined: RendezVousAvecImagerie[] = rendezVousData.map((rv: any) => ({
+          rendezVousId: rv.id,
+          rendezVous: {
+            nom_patient: rv.nom_patient,
+            date: rv.date,
+            heure: rv.heure,
+            acte: rv.acte ? { Nom_Acte: rv.acte.Nom_Acte } : undefined,
+          },
+          imagerie: imageriesMap.get(rv.id) || null,
+        }));
+        setRendezVousAvecImageries(combined);
+        const acteNom = currentRendezVous?.rendezVous?.acte?.Nom_Acte || "l'imagerie";
+        Swal.fire({
+          icon: "success",
           title: "Ajoutée",
-          description: `L’imagerie "${newImagerie.type}" a été ajoutée avec succès`,
+          text: `L'imagerie pour "${acteNom}" a été ajoutée avec succès`,
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setAlert({
-        variant: "error",
+      const errorMessage = err?.message || "Impossible de sauvegarder l'imagerie";
+      Swal.fire({
+        icon: "error",
         title: "Erreur",
-        description: "Impossible de sauvegarder l’imagerie",
+        text: errorMessage,
       });
     } finally {
       setShowModal(false);
       setEditImagerie(null);
+      setSelectedFile(null);
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      setPreviewUrl(null);
       setNewImagerie({ type: "", urlImage: "", compteRenduId: 0, rendezVousId: 0 });
     }
   };
@@ -99,150 +208,197 @@ export default function ImageriesPage() {
   const handleEdit = (imagerie: Imagerie) => {
     setEditImagerie(imagerie);
     setNewImagerie(imagerie);
+    setSelectedFile(null);
+    setPreviewUrl(null);
     setShowModal(true);
   };
 
+  // Ajouter une imagerie pour un rendez-vous qui n'en a pas
+  const handleAddForRendezVous = (rendezVousId: number) => {
+    setNewImagerie({ type: "", urlImage: "", compteRenduId: 0, rendezVousId });
+    setEditImagerie(null);
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setShowModal(true);
+  };
+
+  // Trouver le rendez-vous actuel pour afficher ses informations
+  const getCurrentRendezVous = () => {
+    if (newImagerie.rendezVousId) {
+      return rendezVousAvecImageries.find(
+        (rv) => rv.rendezVousId === newImagerie.rendezVousId
+      );
+    }
+    return null;
+  };
+
+  const currentRendezVous = getCurrentRendezVous();
+
+  // Gérer la sélection de fichier
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      // Créer une URL de prévisualisation
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
   // suppression
-  const handleDelete = (imagerie: Imagerie) => {
-    setImagerieToDelete(imagerie);
-    setShowModal(true); // ouvrir modal suppression
-  };
+  const handleDelete = async (imagerie: Imagerie) => {
+    const result = await Swal.fire({
+      title: "Êtes-vous sûr ?",
+      text: `Voulez-vous vraiment supprimer l'imagerie "${imagerie.type || 'cette imagerie'}" ?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Oui, supprimer",
+      cancelButtonText: "Annuler",
+    });
 
-  const confirmDelete = async () => {
-    if (!imagerieToDelete || imagerieToDelete.id == null) return;
-    try {
-      await deleteImagerie(imagerieToDelete.id);
-      setImageries(imageries.filter((i) => i.id !== imagerieToDelete.id));
-      setAlert({
-        variant: "success",
-        title: "Supprimée",
-        description: `L’imagerie "${imagerieToDelete.type}" a été supprimée`,
-      });
-    } catch (err) {
-      console.error(err);
-      setAlert({
-        variant: "error",
-        title: "Erreur",
-        description: `Impossible de supprimer "${imagerieToDelete.type}"`,
-      });
-    } finally {
-      setImagerieToDelete(null);
-      setShowModal(false);
+    if (result.isConfirmed && imagerie.id != null) {
+      try {
+        await deleteImagerie(imagerie.id);
+        // Recharger les données pour mettre à jour la liste
+        const [rendezVousData, imageriesData] = await Promise.all([
+          getRendezVous(),
+          getImageries(),
+        ]);
+        const imageriesMap = new Map<number, Imagerie>();
+        imageriesData.forEach((img: Imagerie) => {
+          const rvId = img.rendezVousId || img.rendezVous?.id;
+          if (rvId) {
+            imageriesMap.set(rvId, img);
+          }
+        });
+        const combined: RendezVousAvecImagerie[] = rendezVousData.map((rv: any) => ({
+          rendezVousId: rv.id,
+          rendezVous: {
+            nom_patient: rv.nom_patient,
+            date: rv.date,
+            heure: rv.heure,
+            acte: rv.acte ? { Nom_Acte: rv.acte.Nom_Acte } : undefined,
+          },
+          imagerie: imageriesMap.get(rv.id) || null,
+        }));
+        setRendezVousAvecImageries(combined);
+        Swal.fire({
+          icon: "success",
+          title: "Supprimée",
+          text: `L'imagerie "${imagerie.type || 'cette imagerie'}" a été supprimée`,
+        });
+      } catch (err: any) {
+        console.error(err);
+        const errorMessage = err?.message || `Impossible de supprimer "${imagerie.type || 'cette imagerie'}"`;
+        Swal.fire({
+          icon: "error",
+          title: "Erreur",
+          text: errorMessage,
+        });
+      }
     }
   };
-
-  const cancelDelete = () => {
-    setImagerieToDelete(null);
-    setShowModal(false);
-  };
-
-  // ✅ Auto-hide alert après 10 secondes
-  useEffect(() => {
-    if (alert && alert.variant !== "warning") {
-      const timer = setTimeout(() => {
-        setAlert(null);
-      }, 10000);
-      return () => clearTimeout(timer);
-    }
-  }, [alert]);
 
   return (
     <>
       <Breadcrumb pageName="Imageries" />
 
       <div className="rounded-[10px] border border-stroke bg-white p-4 shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card sm:p-7.5">
-        <div className="mb-4 flex justify-end">
-          <Button
-            size="small"
-            onClick={() => setShowModal(true)}
-            label="Ajouter Imagerie"
-            variant="outlinePrimary"
-            shape="full"
-          />
-        </div>
+        
         <TableImagerie
-          data={imageries}
+          data={rendezVousAvecImageries}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onAddForRendezVous={handleAddForRendezVous}
         />
       </div>
 
-      {/* Modal ajout/édition ou suppression */}
+      {/* Modal ajout/édition */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="w-full max-w-lg rounded bg-white shadow">
-            {/* Si suppression */}
-            {imagerieToDelete ? (
-              <div className="p-6">
-                <h3 className="mb-4 text-lg font-medium">Supprimer l’imagerie</h3>
-                <p className="mb-4">
-                  Voulez-vous vraiment supprimer "{imagerieToDelete.type}" ?
-                </p>
-                <div className="flex justify-end gap-3">
-                  <button
-                    className="rounded bg-gray-200 px-4 py-1"
-                    onClick={cancelDelete}
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    className="rounded bg-red-500 px-4 py-1 text-white"
-                    onClick={confirmDelete}
-                  >
-                    Supprimer
-                  </button>
-                </div>
-              </div>
-            ) : (
-              /* Formulaire ajout/édition */
-              <ShowcaseSection
-                title={editImagerie ? "Modifier Imagerie" : "Ajouter Imagerie"}
-                className="!p-6.5"
-              >
+            <ShowcaseSection
+              title={editImagerie ? "Modifier Imagerie" : "Ajouter Imagerie"}
+              className="!p-6.5"
+            >
                 <form onSubmit={handleSaveImagerie}>
-                  <InputGroup
-                    label="Type"
-                    type="text"
-                    placeholder="Entrer le type d’imagerie"
-                    className="mb-4.5"
-                    value={newImagerie.type}
-                    handleChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      handleChange("type", e.target.value)
-                    }
-                  />
+                  {/* Affichage de l'acte */}
+                  <div className="mb-4.5">
+                    <label className="mb-2.5 block text-sm font-medium text-dark dark:text-white">
+                      Acte
+                    </label>
+                    <div className="w-full rounded-lg border-[1.5px] border-stroke bg-gray-2 px-5.5 py-3 text-dark dark:border-dark-3 dark:bg-dark-2 dark:text-white">
+                      {currentRendezVous?.rendezVous?.acte?.Nom_Acte || "-"}
+                    </div>
+                  </div>
 
-                  <InputGroup
-                    label="URL de l’image"
-                    type="text"
-                    placeholder="Entrer l’URL de l’image"
-                    className="mb-4.5"
-                    value={newImagerie.urlImage}
-                    handleChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      handleChange("urlImage", e.target.value)
-                    }
-                  />
+                  {/* Input file pour uploader l'image */}
+                  <div className="mb-4.5">
+                    <label className="mb-2.5 block text-sm font-medium text-dark dark:text-white">
+                      Image
+                    </label>
+                    <div className="relative block w-full rounded-xl border border-dashed border-gray-4 bg-gray-2 hover:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-primary">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        id="imageUpload"
+                      />
+                      <label
+                        htmlFor="imageUpload"
+                        className="flex cursor-pointer flex-col items-center justify-center p-4 sm:py-7.5"
+                      >
+                        {previewUrl ? (
+                          <div className="relative w-full max-w-xs">
+                            <img
+                              src={previewUrl}
+                              alt="Aperçu"
+                              className="w-full h-auto rounded-lg max-h-48 object-contain"
+                            />
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setSelectedFile(null);
+                                setPreviewUrl(null);
+                                const input = document.getElementById("imageUpload") as HTMLInputElement;
+                                if (input) input.value = "";
+                              }}
+                              className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex size-13.5 items-center justify-center rounded-full border border-stroke bg-white dark:border-dark-3 dark:bg-gray-dark">
+                              <UploadIcon />
+                            </div>
+                            <p className="mt-2.5 text-body-sm font-medium">
+                              <span className="text-primary">Cliquez pour uploader</span> ou glissez-déposez
+                            </p>
+                            <p className="mt-1 text-body-xs">
+                              PNG, JPG, JPEG ou GIF
+                            </p>
+                          </>
+                        )}
+                      </label>
+                    </div>
+                  </div>
 
-                  <InputGroup
-                    label="ID Compte Rendu"
-                    type="number"
-                    placeholder="Entrer l’ID du compte rendu"
-                    className="mb-4.5"
-                    value={newImagerie.compteRenduId.toString()}
-                    handleChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      handleChange("compteRenduId", Number(e.target.value))
-                    }
-                  />
-
-                  <InputGroup
-                    label="ID Rendez-vous"
-                    type="number"
-                    placeholder="Entrer l’ID du rendez-vous"
-                    className="mb-4.5"
-                    value={newImagerie.rendezVousId.toString()}
-                    handleChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      handleChange("rendezVousId", Number(e.target.value))
-                    }
-                  />
+                  {/* Affichage du nom du patient */}
+                  <div className="mb-4.5">
+                    <label className="mb-2.5 block text-sm font-medium text-dark dark:text-white">
+                      Patient
+                    </label>
+                    <div className="w-full rounded-lg border-[1.5px] border-stroke bg-gray-2 px-5.5 py-3 text-dark dark:border-dark-3 dark:bg-dark-2 dark:text-white">
+                      {currentRendezVous?.rendezVous?.nom_patient || "-"}
+                    </div>
+                  </div>
 
                   <div className="flex justify-end gap-3">
                     <button
@@ -251,6 +407,11 @@ export default function ImageriesPage() {
                       onClick={() => {
                         setShowModal(false);
                         setEditImagerie(null);
+                        setSelectedFile(null);
+                        if (previewUrl) {
+                          URL.revokeObjectURL(previewUrl);
+                        }
+                        setPreviewUrl(null);
                         setNewImagerie({
                           type: "",
                           urlImage: "",
@@ -270,23 +431,10 @@ export default function ImageriesPage() {
                   </div>
                 </form>
               </ShowcaseSection>
-            )}
           </div>
         </div>
       )}
 
-      {/* Modal alert global success / error */}
-      {alert && alert.variant !== "warning" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-lg rounded shadow">
-            <Alert
-              variant={alert.variant}
-              title={alert.title}
-              description={alert.description}
-            />
-          </div>
-        </div>
-      )}
     </>
   );
 }
