@@ -14,40 +14,40 @@ import { Switch } from "@/components/FormElements/switch";
 import { ShowcaseSection } from "@/components/Layouts/showcase-section";
 
 export const metadata: Metadata = {
-  title: "Form Elements",
+  title: "Éléments de Formulaire",
 };
 
 export default function FormElementsPage() {
   return (
     <>
-      <Breadcrumb pageName="Form Elements" />
+      <Breadcrumb pageName="Éléments de Formulaire" />
 
       <div className="grid grid-cols-1 gap-9 sm:grid-cols-2">
         <div className="flex flex-col gap-9">
-          <ShowcaseSection title="Input Fields" className="space-y-5.5 !p-6.5">
+          <ShowcaseSection title="Champs de saisie" className="space-y-5.5 !p-6.5">
             <InputGroup
-              label="Default input"
-              placeholder="Default input text"
+              label="Saisie par défaut"
+              placeholder="Texte de saisie par défaut"
               type="text"
             />
 
             <InputGroup
-              label="Active input"
-              placeholder="Active input text"
+              label="Saisie active"
+              placeholder="Texte de saisie active"
               active
               type="text"
             />
 
             <InputGroup
-              label="Disabled input"
-              placeholder="Disabled input text"
+              label="Saisie désactivée"
+              placeholder="Texte de saisie désactivée"
               type="text"
               disabled
             />
           </ShowcaseSection>
 
           <ShowcaseSection
-            title="Toggle switch input"
+            title="Interrupteur à bascule"
             className="space-y-5.5 !p-6.5"
           >
             <Switch />
@@ -56,54 +56,54 @@ export default function FormElementsPage() {
             <Switch background="dark" />
           </ShowcaseSection>
 
-          <ShowcaseSection title="Time and date" className="space-y-5.5 !p-6.5">
+          <ShowcaseSection title="Heure et date" className="space-y-5.5 !p-6.5">
             <DatePickerOne />
             <DatePickerTwo />
           </ShowcaseSection>
 
-          <ShowcaseSection title="File upload" className="space-y-5.5 !p-6.5">
+          <ShowcaseSection title="Téléchargement de fichier" className="space-y-5.5 !p-6.5">
             <InputGroup
               type="file"
               fileStyleVariant="style1"
-              label="Attach file"
-              placeholder="Attach file"
+              label="Joindre un fichier"
+              placeholder="Joindre un fichier"
             />
 
             <InputGroup
               type="file"
               fileStyleVariant="style2"
-              label="Attach file"
-              placeholder="Attach file"
+              label="Joindre un fichier"
+              placeholder="Joindre un fichier"
             />
           </ShowcaseSection>
         </div>
 
         <div className="flex flex-col gap-9">
-          <ShowcaseSection title="Textarea Fields" className="space-y-6 !p-6.5">
+          <ShowcaseSection title="Zones de texte" className="space-y-6 !p-6.5">
             <TextAreaGroup
-              label="Default textarea"
-              placeholder="Default textarea"
+              label="Zone de texte par défaut"
+              placeholder="Zone de texte par défaut"
             />
 
             <TextAreaGroup
-              label="Active textarea"
-              placeholder="Active textarea"
+              label="Zone de texte active"
+              placeholder="Zone de texte active"
               active
             />
 
             <TextAreaGroup
-              label="Disabled textarea"
-              placeholder="Disabled textarea"
+              label="Zone de texte désactivée"
+              placeholder="Zone de texte désactivée"
               disabled
             />
           </ShowcaseSection>
 
-          <ShowcaseSection title="Select input" className="space-y-5.5 !p-6.5">
+          <ShowcaseSection title="Sélection" className="space-y-5.5 !p-6.5">
             <Select
-              label="Select Country"
+              label="Sélectionner un pays"
               items={[
-                { label: "United States", value: "USA" },
-                { label: "United Kingdom", value: "UK" },
+                { label: "États-Unis", value: "USA" },
+                { label: "Royaume-Uni", value: "UK" },
                 { label: "Canada", value: "Canada" },
               ]}
               defaultValue="USA"
@@ -113,14 +113,14 @@ export default function FormElementsPage() {
           </ShowcaseSection>
 
           <ShowcaseSection
-            title="Checkbox and radio"
+            title="Cases à cocher et boutons radio"
             className="space-y-5.5 !p-6.5"
           >
-            <Checkbox label="Checkbox Text" />
-            <Checkbox label="Checkbox Text" withIcon="check" />
-            <Checkbox label="Checkbox Text" withIcon="x" />
-            <RadioInput label="Checkbox Text" />
-            <RadioInput label="Checkbox Text" variant="circle" />
+            <Checkbox label="Texte de case à cocher" />
+            <Checkbox label="Texte de case à cocher" withIcon="check" />
+            <Checkbox label="Texte de case à cocher" withIcon="x" />
+            <RadioInput label="Texte de bouton radio" />
+            <RadioInput label="Texte de bouton radio" variant="circle" />
           </ShowcaseSection>
         </div>
       </div>

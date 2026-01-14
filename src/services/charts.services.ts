@@ -95,51 +95,127 @@ export async function getPaymentsOverviewData(
 }
 
 export async function getWeeksProfitData(timeFrame?: string) {
-  // Fake delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-  if (timeFrame === "last week") {
-    return {
-      sales: [
-        { x: "Sat", y: 33 },
-        { x: "Sun", y: 44 },
-        { x: "Mon", y: 31 },
-        { x: "Tue", y: 57 },
-        { x: "Wed", y: 12 },
-        { x: "Thu", y: 33 },
-        { x: "Fri", y: 55 },
-      ],
-      revenue: [
-        { x: "Sat", y: 10 },
-        { x: "Sun", y: 20 },
-        { x: "Mon", y: 17 },
-        { x: "Tue", y: 7 },
-        { x: "Wed", y: 10 },
-        { x: "Thu", y: 23 },
-        { x: "Fri", y: 13 },
-      ],
-    };
+  // Calculer les dates de début et fin de la semaine
+  const now = new Date();
+  const isLastWeek = timeFrame === "semaine dernière";
+  
+  // Trouver le samedi de la semaine (début de la semaine)
+  // getDay() retourne 0 pour dimanche, 1 pour lundi, ..., 6 pour samedi
+  const currentDay = now.getDay();
+  // Calculer le nombre de jours à soustraire pour arriver au samedi
+  // Si on est dimanche (0), on remonte de 1 jour pour arriver à samedi (6)
+  // Si on est lundi (1), on remonte de 2 jours pour arriver à samedi (6)
+  // etc.
+  let daysToSubtract = 0;
+  if (currentDay === 0) {
+    // Dimanche, on remonte de 1 jour
+    daysToSubtract = 1;
+  } else if (currentDay === 6) {
+    // Samedi, on ne remonte pas
+    daysToSubtract = 0;
+  } else {
+    // Autres jours, on remonte jusqu'au samedi précédent
+    daysToSubtract = currentDay + 1;
+  }
+  
+  const saturday = new Date(now);
+  saturday.setDate(now.getDate() - daysToSubtract - (isLastWeek ? 7 : 0));
+  saturday.setHours(0, 0, 0, 0);
+
+  // Créer un tableau pour les 7 jours de la semaine
+  const daysOfWeek = ["Sam", "Dim", "Lun", "Mar", "Mer", "Jeu", "Ven"];
+  const weekData: { [key: string]: { images: number; comptesRendus: number } } = {};
+  
+  // Initialiser tous les jours à 0
+  for (let i = 0; i < 7; i++) {
+    const day = new Date(saturday);
+    day.setDate(saturday.getDate() + i);
+    const dayKey = day.toISOString().split('T')[0];
+    weekData[dayKey] = { images: 0, comptesRendus: 0 };
+  }
+
+  try {
+    // Récupérer les images
+    const imagesRes = await fetch(`${API_URL}/imageries`, { cache: "no-store" });
+    if (imagesRes.ok) {
+      const images = await imagesRes.json();
+      images.forEach((image: any) => {
+        if (image.rendezVous?.date) {
+          const imageDate = new Date(image.rendezVous.date);
+          imageDate.setHours(0, 0, 0, 0);
+          const imageDateStr = imageDate.toISOString().split('T')[0];
+          
+          // Vérifier si la date est dans la semaine
+          const weekStart = new Date(saturday);
+          weekStart.setHours(0, 0, 0, 0);
+          const weekEnd = new Date(saturday);
+          weekEnd.setDate(saturday.getDate() + 6);
+          weekEnd.setHours(23, 59, 59, 999);
+          
+          if (imageDate >= weekStart && imageDate <= weekEnd) {
+            if (weekData[imageDateStr]) {
+              weekData[imageDateStr].images++;
+            }
+          }
+        }
+      });
+    }
+
+    // Récupérer les comptes rendus
+    const comptesRendusRes = await fetch(`${API_URL}/compterendu`, { cache: "no-store" });
+    if (comptesRendusRes.ok) {
+      const comptesRendus = await comptesRendusRes.json();
+      comptesRendus.forEach((cr: any) => {
+        if (cr.date_creation) {
+          const crDate = new Date(cr.date_creation);
+          crDate.setHours(0, 0, 0, 0);
+          const crDateStr = crDate.toISOString().split('T')[0];
+          
+          // Vérifier si la date est dans la semaine
+          const weekStart = new Date(saturday);
+          weekStart.setHours(0, 0, 0, 0);
+          const weekEnd = new Date(saturday);
+          weekEnd.setDate(saturday.getDate() + 6);
+          weekEnd.setHours(23, 59, 59, 999);
+          
+          if (crDate >= weekStart && crDate <= weekEnd) {
+            if (weekData[crDateStr]) {
+              weekData[crDateStr].comptesRendus++;
+            }
+          }
+        }
+      });
+    }
+  } catch (error) {
+    console.error("Erreur lors de la récupération des données:", error);
+  }
+
+  // Construire les données pour le graphique
+  const imagesData: { x: string; y: number }[] = [];
+  const comptesRendusData: { x: string; y: number }[] = [];
+
+  for (let i = 0; i < 7; i++) {
+    const day = new Date(saturday);
+    day.setDate(saturday.getDate() + i);
+    const dayKey = day.toISOString().split('T')[0];
+    const dayName = daysOfWeek[i];
+    
+    imagesData.push({
+      x: dayName,
+      y: weekData[dayKey]?.images || 0,
+    });
+    
+    comptesRendusData.push({
+      x: dayName,
+      y: weekData[dayKey]?.comptesRendus || 0,
+    });
   }
 
   return {
-    sales: [
-      { x: "Sat", y: 44 },
-      { x: "Sun", y: 55 },
-      { x: "Mon", y: 41 },
-      { x: "Tue", y: 67 },
-      { x: "Wed", y: 22 },
-      { x: "Thu", y: 43 },
-      { x: "Fri", y: 65 },
-    ],
-    revenue: [
-      { x: "Sat", y: 13 },
-      { x: "Sun", y: 23 },
-      { x: "Mon", y: 20 },
-      { x: "Tue", y: 8 },
-      { x: "Wed", y: 13 },
-      { x: "Thu", y: 27 },
-      { x: "Fri", y: 15 },
-    ],
+    images: imagesData,
+    comptesRendus: comptesRendusData,
   };
 }
 

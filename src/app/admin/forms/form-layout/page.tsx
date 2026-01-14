@@ -6,13 +6,13 @@ import { SignInForm } from "./_components/sign-in-form";
 import { SignUpForm } from "./_components/sign-up-form";
 
 export const metadata: Metadata = {
-  title: "Form Layout",
+  title: "Mise en Page des Formulaires",
 };
 
 export default function Page() {
   return (
     <>
-      <Breadcrumb pageName="Form Layout" />
+      <Breadcrumb pageName="Mise en Page des Formulaires" />
 
       <div className="grid grid-cols-1 gap-9 sm:grid-cols-2">
         <div className="flex flex-col gap-9">

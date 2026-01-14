@@ -139,10 +139,10 @@ export function PersonalInfoForm() {
             className="w-full sm:w-1/2"
             type="text"
             name="name"
-            label="Name"
+            label="Prénom"
             value={formData.name}
             handleChange={handleInputChange}
-            placeholder="name"
+            placeholder="prénom"
             icon={<UserIcon />}
             iconPosition="left"
             height="sm"
@@ -152,10 +152,10 @@ export function PersonalInfoForm() {
             className="w-full sm:w-1/2"
             type="text"
             name="lastName"
-            label="Last Name"
+            label="Nom"
             value={formData.lastName}
             handleChange={handleInputChange}
-            placeholder="last name"
+            placeholder="nom"
             icon={<CallIcon />}
             iconPosition="left"
             height="sm"
@@ -166,7 +166,7 @@ export function PersonalInfoForm() {
           className="mb-5.5"
           type="email"
           name="email"
-          label="Email Address"
+          label="Adresse email"
           value={formData.email}
           handleChange={handleInputChange}
           placeholder="email"
@@ -179,10 +179,10 @@ export function PersonalInfoForm() {
           className="mb-5.5"
           type="password"
           name="password"
-          label="Password"
+          label="Mot de passe"
           value={formData.password}
           handleChange={handleInputChange}
-          placeholder="password"
+          placeholder="mot de passe"
           icon={<UserIcon />}
           iconPosition="left"
           height="sm"
@@ -194,14 +194,14 @@ export function PersonalInfoForm() {
             className="rounded-lg border border-stroke px-6 py-[7px] font-medium text-dark hover:shadow-1 dark:border-dark-3 dark:text-white"
             onClick={loadProfile}
           >
-            Reload
+            Recharger
           </button>
 
           <button
             type="submit"
             className="rounded-lg bg-primary px-6 py-[7px] font-medium text-gray-2 hover:bg-opacity-90"
           >
-            Save
+            Enregistrer
           </button>
         </div>
       </form>

@@ -36,6 +36,28 @@ export default function ImageriesPage() {
 
   // 👉 modal ajout/édition
   const [showModal, setShowModal] = useState(false);
+  
+  // Masquer le header quand le modal est ouvert
+  useEffect(() => {
+    if (showModal) {
+      const header = document.querySelector('header');
+      if (header) {
+        header.style.display = 'none';
+      }
+    } else {
+      const header = document.querySelector('header');
+      if (header) {
+        header.style.display = '';
+      }
+    }
+    return () => {
+      const header = document.querySelector('header');
+      if (header) {
+        header.style.display = '';
+      }
+    };
+  }, [showModal]);
+  
   const [newImagerie, setNewImagerie] = useState<Imagerie>({
     type: "",
     urlImage: "",

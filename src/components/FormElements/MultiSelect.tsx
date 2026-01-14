@@ -97,7 +97,7 @@ const MultiSelect: React.FC<DropdownProps> = ({ id }) => {
   return (
     <div className="relative z-50">
       <label className="mb-3 block text-body-sm font-medium text-dark dark:text-white">
-        Multiselect Dropdown
+        Sélection multiple
       </label>
       <div>
         <select className="hidden" id={id}>
@@ -150,7 +150,7 @@ const MultiSelect: React.FC<DropdownProps> = ({ id }) => {
                     {selected.length === 0 && (
                       <div className="flex-1">
                         <input
-                          placeholder="Select an option"
+                          placeholder="Sélectionner une option"
                           className="h-full w-full appearance-none bg-transparent p-1 px-2 text-dark-5 outline-none dark:text-dark-6"
                           defaultValue={selectedValues()}
                         />

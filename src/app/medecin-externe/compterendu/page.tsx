@@ -11,9 +11,14 @@ export const metadata: Metadata = {
 export default function CompteRenduPage() {
   return (
     <>
-      <Breadcrumb pageName="Comptes rendus" />
+      <Breadcrumb pageName="Consultation des Comptes rendus" />
 
-      <div className="space-y-10">
+      <div className="rounded-[10px] border border-stroke bg-white p-4 shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card sm:p-7.5">
+        <div className="mb-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Consultez les comptes rendus des patients. Mode consultation uniquement.
+          </p>
+        </div>
         <TableCompteRendu />
       </div>
     </>

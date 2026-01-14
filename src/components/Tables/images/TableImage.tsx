@@ -28,12 +28,21 @@ export interface RendezVousAvecImagerie {
 
 interface ImagerieTableProps {
   data: RendezVousAvecImagerie[];
-  onEdit: (img: Imagerie) => void;
-  onDelete: (img: Imagerie) => void;
-  onAddForRendezVous: (rendezVousId: number) => void;
+  onEdit?: (img: Imagerie) => void;
+  onDelete?: (img: Imagerie) => void;
+  onAddForRendezVous?: (rendezVousId: number) => void;
+  readOnly?: boolean;
+  onView?: (img: Imagerie, rendezVous: RendezVousAvecImagerie["rendezVous"]) => void;
 }
 
-export function TableImagerie({ data, onEdit, onDelete, onAddForRendezVous }: ImagerieTableProps) {
+export function TableImagerie({ 
+  data, 
+  onEdit, 
+  onDelete, 
+  onAddForRendezVous,
+  readOnly = false,
+  onView
+}: ImagerieTableProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewData, setPreviewData] = useState<{
     url: string;
@@ -52,7 +61,7 @@ export function TableImagerie({ data, onEdit, onDelete, onAddForRendezVous }: Im
             <TableHead>Date RDV</TableHead>
             <TableHead>Acte</TableHead>
             <TableHead>Aperçu</TableHead>
-            <TableHead className="text-right xl:pr-7.5">Actions</TableHead>
+            {!readOnly && <TableHead className="text-right xl:pr-7.5">Actions</TableHead>}
           </TableRow>
         </TableHeader>
 
@@ -80,6 +89,9 @@ export function TableImagerie({ data, onEdit, onDelete, onAddForRendezVous }: Im
                 {item.imagerie?.urlImage ? (
                   <button
                     onClick={() => {
+                      if (onView && item.imagerie) {
+                        onView(item.imagerie, item.rendezVous);
+                      } else {
                       const imageUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${item.imagerie!.urlImage}`;
                       setPreviewData({
                         url: imageUrl,
@@ -87,6 +99,7 @@ export function TableImagerie({ data, onEdit, onDelete, onAddForRendezVous }: Im
                         date: item.rendezVous?.date,
                         acte: item.rendezVous?.acte?.Nom_Acte,
                       });
+                      }
                     }}
                     className="hover:text-primary"
                     title="Visualiser l'image"
@@ -99,10 +112,12 @@ export function TableImagerie({ data, onEdit, onDelete, onAddForRendezVous }: Im
               </TableCell>
 
               {/* Actions */}
+              {!readOnly && (
               <TableCell className="xl:pr-7.5">
                 <div className="flex items-center justify-end gap-x-3.5">
                   {item.imagerie ? (
                     <>
+                        {onEdit && (
                       <button
                         onClick={() => onEdit(item.imagerie!)}
                         className="hover:text-primary"
@@ -110,6 +125,8 @@ export function TableImagerie({ data, onEdit, onDelete, onAddForRendezVous }: Im
                       >
                         <PencilSquareIcon />
                       </button>
+                        )}
+                        {onDelete && (
                       <button
                         onClick={() => onDelete(item.imagerie!)}
                         className="hover:text-red-500"
@@ -117,8 +134,10 @@ export function TableImagerie({ data, onEdit, onDelete, onAddForRendezVous }: Im
                       >
                         <TrashIcon />
                       </button>
+                        )}
                     </>
                   ) : (
+                      onAddForRendezVous && (
                     <button
                       onClick={() => onAddForRendezVous(item.rendezVousId)}
                       className="hover:text-primary"
@@ -126,9 +145,11 @@ export function TableImagerie({ data, onEdit, onDelete, onAddForRendezVous }: Im
                     >
                       <PlusIcon />
                     </button>
+                      )
                   )}
                 </div>
               </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>

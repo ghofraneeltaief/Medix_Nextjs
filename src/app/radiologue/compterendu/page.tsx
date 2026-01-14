@@ -1,27 +1,20 @@
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import { InvoiceTable } from "@/components/Tables/users/TableUser";
-import { TopChannels } from "@/components/Tables/top-channels";
-import { TopChannelsSkeleton } from "@/components/Tables/top-channels/skeleton";
-import { TopProducts } from "@/components/Tables/top-products";
-import { TopProductsSkeleton } from "@/components/Tables/top-products/skeleton";
+import { TableCompteRendu } from "@/components/Tables/compteRendu/TableCompteRendu";
 
 import { Metadata } from "next";
-import { Suspense } from "react";
 
 export const metadata: Metadata = {
-  title: "Tables",
+  title: "Comptes rendus",
 };
 
-const TablesPage = () => {
+export default function CompteRenduPage() {
   return (
     <>
       <Breadcrumb pageName="Comptes rendus" />
 
-      <div className="space-y-10">
-        <InvoiceTable />
+      <div className="rounded-[10px] border border-stroke bg-white p-4 shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card sm:p-7.5">
+        <TableCompteRendu />
       </div>
     </>
   );
-};
-
-export default TablesPage;
+}

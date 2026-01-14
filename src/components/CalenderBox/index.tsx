@@ -24,6 +24,28 @@ type RendezVous = {
 
 const CalendarBox = () => {
   const [showModal, setShowModal] = useState(false);
+  
+  // Masquer le header quand le modal est ouvert
+  useEffect(() => {
+    if (showModal) {
+      const header = document.querySelector('header');
+      if (header) {
+        header.style.display = 'none';
+      }
+    } else {
+      const header = document.querySelector('header');
+      if (header) {
+        header.style.display = '';
+      }
+    }
+    return () => {
+      const header = document.querySelector('header');
+      if (header) {
+        header.style.display = '';
+      }
+    };
+  }, [showModal]);
+  
   const [editingRdvId, setEditingRdvId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     nom_patient: "",
@@ -187,6 +209,39 @@ setRendezvous(
         icon: "warning",
         title: "Champ requis",
         text: "Veuillez entrer le nom du patient",
+      });
+      return;
+    }
+
+    if (!formData.date) {
+      Swal.fire({
+        icon: "warning",
+        title: "Champ requis",
+        text: "Veuillez sélectionner une date",
+      });
+      return;
+    }
+
+    // Validation de la date (pas dans le passé, pas un dimanche)
+    const selectedDate = new Date(formData.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dayOfWeek = selectedDate.getDay();
+
+    if (selectedDate < today) {
+      Swal.fire({
+        icon: "error",
+        title: "Date invalide",
+        text: "La date ne peut pas être dans le passé",
+      });
+      return;
+    }
+
+    if (dayOfWeek === 0) {
+      Swal.fire({
+        icon: "error",
+        title: "Date invalide",
+        text: "Les rendez-vous ne peuvent pas être programmés le dimanche",
       });
       return;
     }
@@ -627,6 +682,19 @@ setRendezvous(
                   onChange={handleChange}
                   className="w-full rounded border border-gray-300 p-2"
                   required
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium">Date</label>
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleChange}
+                  className="w-full rounded border border-gray-300 p-2"
+                  required
+                  min={new Date().toISOString().split('T')[0]}
                 />
               </div>
 

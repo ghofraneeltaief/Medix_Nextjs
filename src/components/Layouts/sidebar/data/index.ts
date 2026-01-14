@@ -3,33 +3,33 @@ import * as Icons from "../icons";
 // Mapping rôle -> URLs
 const ROLE_URL_MAP: Record<string, Record<string, string>> = {
   admin: {
-    Dashboard: "/admin",
+    "Tableau de bord": "/admin",
     "Rendez-vous": "/admin/calendar",
-    Profile: "/admin/pages/settings",
-    Actes: "/admin/actes",
-    Users: "/admin/users",
-    Images: "/admin/image",
+    "Profil": "/admin/pages/settings",
+    "Actes": "/admin/actes",
+    "Utilisateurs": "/admin/users",
+    "Images": "/admin/image",
     "Comptes rendus": "/admin/compterendu",
-    Factures: "/admin/factures",
+    "Factures": "/admin/factures",
   },
   assistante: {
     "Rendez-vous": "/assistante/calendar",
-    Profile: "/assistante/pages/settings",
-    Factures: "/assistante/factures",
+    "Profil": "/assistante/pages/settings",
+    "Factures": "/assistante/factures",
   },
   médecin: {
-    Profile: "/medecin-externe/pages/settings",
-    Images: "/medecin-externe/image",
+    "Profil": "/medecin-externe/pages/settings",
+    "Images": "/medecin-externe/image",
     "Comptes rendus": "/medecin-externe/compterendu",
   },
   "médecin radiologue": {
-    Profile: "/radiologue/pages/settings",
-    Images: "/radiologue/image",
+    "Profil": "/radiologue/pages/settings",
+    "Images": "/radiologue/image",
     "Comptes rendus": "/radiologue/compterendu",
   },
   technicien: {
-    Profile: "/technicien/pages/settings",
-    Images: "/technicien/image",
+    "Profil": "/technicien/pages/settings",
+    "Images": "/technicien/image",
   },
 };
 
@@ -39,13 +39,13 @@ export function getNavDataForRole(role: string) {
 
   return [
     {
-      label: "MAIN MENU",
+      label: "MENU PRINCIPAL",
       items: [
-        { title: "Dashboard", icon: Icons.HomeIcon, items: [], url: urls["Dashboard"] },
+        { title: "Tableau de bord", icon: Icons.HomeIcon, items: [], url: urls["Tableau de bord"] },
         { title: "Rendez-vous", icon: Icons.Calendar, items: [], url: urls["Rendez-vous"] },
-        { title: "Profile", icon: Icons.User, items: [], url: urls["Profile"] },
+        { title: "Profil", icon: Icons.User, items: [], url: urls["Profil"] },
         { title: "Actes", icon: Icons.Alphabet, items: [], url: urls["Actes"] },
-        { title: "Users", icon: Icons.User, items: [], url: urls["Users"] },
+        { title: "Utilisateurs", icon: Icons.User, items: [], url: urls["Utilisateurs"] },
         { title: "Images", icon: Icons.FourCircle, items: [], url: urls["Images"] },
         { title: "Comptes rendus", icon: Icons.Table, items: [], url: urls["Comptes rendus"] },
         { title: "Factures", icon: Icons.PieChart, items: [], url: urls["Factures"] },

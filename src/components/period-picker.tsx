@@ -36,7 +36,7 @@ export function PeriodPicker<TItem extends string>({
             "border-none bg-transparent p-0 text-dark dark:bg-transparent dark:text-white",
         )}
       >
-        <span className="capitalize">{defaultValue || "Time Period"}</span>
+        <span className="capitalize">{defaultValue || "Période"}</span>
 
         <ChevronUpIcon className="size-4 rotate-180 transition-transform" />
       </DropdownTrigger>

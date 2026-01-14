@@ -101,7 +101,7 @@ export default function SigninWithPassword() {
           type="email"
           label="Email"
           className="mb-4 [&_input]:py-[15px]"
-          placeholder="Enter your email"
+          placeholder="Entrez votre email"
           name="email"
           handleChange={handleChange}
           value={data.email}
@@ -110,9 +110,9 @@ export default function SigninWithPassword() {
 
         <InputGroup
           type="password"
-          label="Password"
+          label="Mot de passe"
           className="mb-5 [&_input]:py-[15px]"
-          placeholder="Enter your password"
+          placeholder="Entrez votre mot de passe"
           name="password"
           handleChange={handleChange}
           value={data.password}
@@ -124,7 +124,7 @@ export default function SigninWithPassword() {
             href="/auth/forgot-password"
             className="hover:text-primary dark:text-white dark:hover:text-primary"
           >
-            Forgot Password?
+            Mot de passe oublié ?
           </Link>
         </div>
 
@@ -134,7 +134,7 @@ export default function SigninWithPassword() {
             className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary p-4 font-medium text-white transition hover:bg-opacity-90"
             disabled={loading}
           >
-            Sign In
+            Se connecter
             {loading && (
               <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-t-transparent dark:border-primary dark:border-t-transparent" />
             )}

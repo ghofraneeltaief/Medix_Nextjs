@@ -5,7 +5,7 @@ import Link from "next/link";
 import RedirectIfAuthenticated from "@/components/Signin/RedirectIfAuthenticated";
 
 export const metadata: Metadata = {
-  title: "Sign in",
+  title: "Connexion",
 };
 
 export default function SignIn() {

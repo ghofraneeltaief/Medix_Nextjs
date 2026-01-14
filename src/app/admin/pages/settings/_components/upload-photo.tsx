@@ -4,28 +4,28 @@ import Image from "next/image";
 
 export function UploadPhotoForm() {
   return (
-    <ShowcaseSection title="Your Photo" className="!p-7">
+    <ShowcaseSection title="Votre Photo" className="!p-7">
       <form>
         <div className="mb-4 flex items-center gap-3">
           <Image
             src="/images/user/user-03.png"
             width={55}
             height={55}
-            alt="User"
+            alt="Utilisateur"
             className="size-14 rounded-full object-cover"
             quality={90}
           />
 
           <div>
             <span className="mb-1.5 font-medium text-dark dark:text-white">
-              Edit your photo
+              Modifier votre photo
             </span>
             <span className="flex gap-3">
               <button type="button" className="text-body-sm hover:text-red">
-                Delete
+                Supprimer
               </button>
               <button className="text-body-sm hover:text-primary">
-                Update
+                Mettre à jour
               </button>
             </span>
           </div>
@@ -49,12 +49,11 @@ export function UploadPhotoForm() {
             </div>
 
             <p className="mt-2.5 text-body-sm font-medium">
-              <span className="text-primary">Click to upload</span> or drag and
-              drop
+              <span className="text-primary">Cliquez pour télécharger</span> ou glissez-déposez
             </p>
 
             <p className="mt-1 text-body-xs">
-              SVG, PNG, JPG or GIF (max, 800 X 800px)
+              SVG, PNG, JPG ou GIF (max, 800 X 800px)
             </p>
           </label>
         </div>
@@ -64,13 +63,13 @@ export function UploadPhotoForm() {
             className="flex justify-center rounded-lg border border-stroke px-6 py-[7px] font-medium text-dark hover:shadow-1 dark:border-dark-3 dark:text-white"
             type="button"
           >
-            Cancel
+            Annuler
           </button>
           <button
             className="flex items-center justify-center rounded-lg bg-primary px-6 py-[7px] font-medium text-gray-2 hover:bg-opacity-90"
             type="submit"
           >
-            Save
+            Enregistrer
           </button>
         </div>
       </form>
