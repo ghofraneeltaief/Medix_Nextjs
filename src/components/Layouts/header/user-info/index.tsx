@@ -14,13 +14,31 @@ import { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import { LogOutIcon, SettingsIcon, UserIcon } from "./icons";
 
+/**
+ * Retourne l'URL de la page de paramètres selon le rôle de l'utilisateur
+ */
+function getSettingsUrl(role: string | null): string {
+  const roleRoutes: Record<string, string> = {
+    admin: "/admin/pages/settings",
+    assistante: "/assistante/pages/settings",
+    "médecin": "/medecin-externe/pages/settings",
+    "médecin radiologue": "/radiologue/pages/settings",
+    technicien: "/technicien/pages/settings",
+  };
+
+  return roleRoutes[role || ""] || "/admin/pages/settings";
+}
+
 export function UserInfo() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
-const [user, setUser] = useState<{name: string, email: string,img: "/images/user/user-03.png", lastname: string} | null>(null);
+  const [user, setUser] = useState<{name: string, email: string,img: "/images/user/user-03.png", lastname: string} | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+    
     if (token) {
       const decoded: any = jwtDecode(token);
       setUser({
@@ -29,6 +47,10 @@ const [user, setUser] = useState<{name: string, email: string,img: "/images/user
         email: decoded.email,
         img: "/images/user/user-03.png",
       });
+    }
+    
+    if (role) {
+      setUserRole(role);
     }
   }, []);
 
@@ -104,7 +126,7 @@ const [user, setUser] = useState<{name: string, email: string,img: "/images/user
 
         <div className="p-2 text-base text-[#4B5563] dark:text-dark-6 [&>*]:cursor-pointer">
           <Link
-            href={"/admin/pages/settings"}
+            href={getSettingsUrl(userRole)}
             onClick={() => setIsOpen(false)}
             className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[9px] hover:bg-gray-2 hover:text-dark dark:hover:bg-dark-3 dark:hover:text-white"
           >

@@ -79,11 +79,6 @@ export function CompteRenduViewModal({
         <div className="print-header bg-blue-900 text-white p-6 mb-6">
           <div className="text-center">
             <h1 className="text-3xl font-bold mb-2">CENTRE DE RADIOLOGIE ET IMAGERIE MÉDICALE</h1>
-            <div className="text-sm space-y-1">
-              <p>123 Avenue de la Santé, 75000 Paris</p>
-              <p>Tél: 01 23 45 67 89 | Email: contact@radiologie.fr</p>
-              <p className="mt-2 text-xs">Agrément ARS: 75-12345 | SIRET: 123 456 789 00012</p>
-            </div>
           </div>
         </div>
 
@@ -140,7 +135,7 @@ export function CompteRenduViewModal({
             <div className="bg-gray-200 print-border-b p-3">
               <h3 className="font-bold uppercase text-sm">COMPTE RENDU</h3>
             </div>
-            <div className="p-6 min-h-[300px]">
+            <div className="p-6 min-h-[200px]">
               <div
                 className="whitespace-pre-wrap text-base leading-relaxed"
                 style={{ fontFamily: "Times New Roman, serif" }}
@@ -156,7 +151,7 @@ export function CompteRenduViewModal({
           <div className="grid grid-cols-2 gap-8">
             <div>
               <p className="text-sm font-semibold mb-2">Signature et cachet du médecin:</p>
-              <div className="border-b-2 border-black pb-2 mt-16">
+              <div className="border-b-2 border-black pb-2 ">
                 {selectedRendezVous.compteRendu?.medecin && (
                   <p className="text-sm font-medium">
                     Dr. {selectedRendezVous.compteRendu.medecin.name}{" "}
@@ -165,21 +160,8 @@ export function CompteRenduViewModal({
                 )}
               </div>
             </div>
-            <div>
-              <p className="text-sm font-semibold mb-2">Date de rédaction:</p>
-              <p className="text-sm border-b border-black pb-2">
-                {formatDateCreation(selectedRendezVous.compteRendu?.date_creation)}
-              </p>
-            </div>
           </div>
         </div>
-
-        {/* Référence du document */}
-        {selectedRendezVous.compteRendu?.id && (
-          <div className="mt-8 text-xs text-gray-600 text-right">
-            <p>Référence: {generateDocumentReference(selectedRendezVous.compteRendu.id)}</p>
-          </div>
-        )}
 
         {/* Pied de page */}
         <div className="mt-12 pt-4 border-t-2 border-black text-xs text-center space-y-1">

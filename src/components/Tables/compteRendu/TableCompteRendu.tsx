@@ -163,7 +163,7 @@ export function TableCompteRendu() {
               <TableHead>Aperçu compte rendu</TableHead>
               <TableHead>Compte rendu</TableHead>
               <TableHead className="text-right xl:pr-7.5">
-                {isReadOnly ? "Consultation" : "Actions"}
+                {isReadOnly ? "" : "Actions"}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -213,17 +213,7 @@ export function TableCompteRendu() {
                   <TableCell className="xl:pr-7.5">
                     <div className="flex items-center justify-end gap-x-3.5">
                       {isReadOnly ? (
-                        item.compteRendu ? (
-                          <button
-                            onClick={() => handleViewCompteRendu(item)}
-                            className="hover:text-primary"
-                            title="Consulter le compte rendu"
-                          >
-                            <EyeIcon />
-                          </button>
-                        ) : (
-                          <span className="text-gray-400 text-sm">Aucun compte rendu</span>
-                        )
+                        <></>
                       ) : (
                         item.compteRendu ? (
                           <>

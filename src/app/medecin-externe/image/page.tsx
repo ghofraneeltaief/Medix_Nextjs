@@ -110,12 +110,6 @@ export default function ImageriesPage() {
       <Breadcrumb pageName="Consultation des Images Médicales" />
 
       <div className="rounded-[10px] border border-stroke bg-white p-4 shadow-1 dark:border-dark-3 dark:bg-gray-dark dark:shadow-card sm:p-7.5">
-        <div className="mb-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Consultez les images médicales des patients. Mode consultation uniquement.
-          </p>
-        </div>
-
         {rendezVousAvecImageries.length === 0 ? (
           <div className="py-12 text-center">
             <p className="text-gray-600 dark:text-gray-400">

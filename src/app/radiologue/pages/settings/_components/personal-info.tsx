@@ -149,11 +149,6 @@ export function PersonalInfoForm() {
         </div>
       ) : (
         <>
-          <div className="mb-4 rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
-            <p className="text-sm text-blue-800 dark:text-blue-300">
-              📊 Données chargées depuis la base de données
-            </p>
-          </div>
           <form onSubmit={handleSubmit}>
             <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
               <InputGroup
