@@ -16,8 +16,8 @@ export interface CompteRendu {
   };
   medecin?: {
     id?: number;
-    nom: string;
-    prenom: string;
+    name: string;
+    lastName: string;
   };
   acte?: {
     Id_Acte?: number;
