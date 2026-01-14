@@ -92,53 +92,62 @@ export default function SigninWithPassword() {
           variant={alert.variant}
           title={alert.title}
           description={alert.description}
-          className="mb-4"
+          className="mb-6"
         />
       )}
 
-      <form onSubmit={handleSubmit}>
-        <InputGroup
-          type="email"
-          label="Email"
-          className="mb-4 [&_input]:py-[15px]"
-          placeholder="Entrez votre email"
-          name="email"
-          handleChange={handleChange}
-          value={data.email}
-          icon={<EmailIcon />}
-        />
-
-        <InputGroup
-          type="password"
-          label="Mot de passe"
-          className="mb-5 [&_input]:py-[15px]"
-          placeholder="Entrez votre mot de passe"
-          name="password"
-          handleChange={handleChange}
-          value={data.password}
-          icon={<PasswordIcon />}
-        />
-
-        <div className="mb-6 flex items-center justify-between gap-2 py-2 font-medium">
-          <Link
-            href="/auth/forgot-password"
-            className="hover:text-primary dark:text-white dark:hover:text-primary"
-          >
-            Mot de passe oublié ?
-          </Link>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <InputGroup
+            type="email"
+            label="Adresse email"
+            className="mb-4 [&_input]:py-[15px] [&_input]:rounded-lg [&_input]:border-gray-300 dark:[&_input]:border-gray-600 [&_input]:focus:border-primary [&_input]:focus:ring-2 [&_input]:focus:ring-primary/20"
+            placeholder="votre.email@exemple.com"
+            name="email"
+            handleChange={handleChange}
+            value={data.email}
+            icon={<EmailIcon />}
+          />
         </div>
 
-        <div className="mb-4.5">
-          <button
-            type="submit"
-            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary p-4 font-medium text-white transition hover:bg-opacity-90"
-            disabled={loading}
-          >
-            Se connecter
-            {loading && (
-              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-t-transparent dark:border-primary dark:border-t-transparent" />
-            )}
-          </button>
+        <div>
+          <InputGroup
+            type="password"
+            label="Mot de passe"
+            className="mb-5 [&_input]:py-[15px] [&_input]:rounded-lg [&_input]:border-gray-300 dark:[&_input]:border-gray-600 [&_input]:focus:border-primary [&_input]:focus:ring-2 [&_input]:focus:ring-primary/20"
+            placeholder="••••••••"
+            name="password"
+            handleChange={handleChange}
+            value={data.password}
+            icon={<PasswordIcon />}
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="w-full flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 p-4 font-semibold text-white shadow-lg shadow-blue-500/30 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-solid border-white border-t-transparent" />
+              <span>Connexion en cours...</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+              </svg>
+              <span>Se connecter</span>
+            </>
+          )}
+        </button>
+
+        {/* Informations supplémentaires */}
+        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+            En vous connectant, vous acceptez nos conditions d'utilisation et notre politique de confidentialité.
+          </p>
         </div>
       </form>
     </>

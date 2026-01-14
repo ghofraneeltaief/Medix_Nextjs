@@ -15,16 +15,16 @@ import ProtectedRoute from "@/components/Auth/ProtectedRoute";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | NextAdmin - Next.js Dashboard Kit",
-    default: "NextAdmin - Next.js Dashboard Kit",
+    template: "%s | Gestion Médicale",
+    default: "Gestion Médicale",
   },
   description:
-    "Next.js admin dashboard toolkit with 200+ templates, UI components, and integrations for fast dashboard development.",
+    "Système de gestion médicale pour la radiologie et l'imagerie médicale.",
 };
 
 export default function RootLayout({ children }: PropsWithChildren) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="fr" suppressHydrationWarning>
       <body>
         <Providers>
           <NextTopLoader color="#5750F1" showSpinner={false} />

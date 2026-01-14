@@ -5,31 +5,31 @@ const ROLE_URL_MAP: Record<string, Record<string, string>> = {
   admin: {
     "Tableau de bord": "/admin",
     "Rendez-vous": "/admin/calendar",
-    "Profil": "/admin/pages/settings",
-    "Actes": "/admin/actes",
-    "Utilisateurs": "/admin/users",
-    "Images": "/admin/image",
+    Actes: "/admin/actes",
+    Utilisateurs: "/admin/users",
+    Images: "/admin/image",
     "Comptes rendus": "/admin/compterendu",
-    "Factures": "/admin/factures",
+    Factures: "/admin/factures",
+    Profil: "/admin/pages/settings",
   },
   assistante: {
     "Rendez-vous": "/assistante/calendar",
-    "Profil": "/assistante/pages/settings",
-    "Factures": "/assistante/factures",
+    Factures: "/assistante/factures",
+    Profil: "/assistante/pages/settings",
   },
   médecin: {
-    "Profil": "/medecin-externe/pages/settings",
-    "Images": "/medecin-externe/image",
+    Images: "/medecin-externe/image",
     "Comptes rendus": "/medecin-externe/compterendu",
+    Profil: "/medecin-externe/pages/settings",
   },
   "médecin radiologue": {
-    "Profil": "/radiologue/pages/settings",
-    "Images": "/radiologue/image",
+    Images: "/radiologue/image",
     "Comptes rendus": "/radiologue/compterendu",
+    Profil: "/radiologue/pages/settings",
   },
   technicien: {
-    "Profil": "/technicien/pages/settings",
-    "Images": "/technicien/image",
+    Images: "/technicien/image",
+    Profil: "/technicien/pages/settings",
   },
 };
 
@@ -41,14 +41,44 @@ export function getNavDataForRole(role: string) {
     {
       label: "MENU PRINCIPAL",
       items: [
-        { title: "Tableau de bord", icon: Icons.HomeIcon, items: [], url: urls["Tableau de bord"] },
-        { title: "Rendez-vous", icon: Icons.Calendar, items: [], url: urls["Rendez-vous"] },
+        {
+          title: "Tableau de bord",
+          icon: Icons.HomeIcon,
+          items: [],
+          url: urls["Tableau de bord"],
+        },
+        {
+          title: "Rendez-vous",
+          icon: Icons.Calendar,
+          items: [],
+          url: urls["Rendez-vous"],
+        },
         { title: "Profil", icon: Icons.User, items: [], url: urls["Profil"] },
         { title: "Actes", icon: Icons.Alphabet, items: [], url: urls["Actes"] },
-        { title: "Utilisateurs", icon: Icons.User, items: [], url: urls["Utilisateurs"] },
-        { title: "Images", icon: Icons.FourCircle, items: [], url: urls["Images"] },
-        { title: "Comptes rendus", icon: Icons.Table, items: [], url: urls["Comptes rendus"] },
-        { title: "Factures", icon: Icons.PieChart, items: [], url: urls["Factures"] },
+        {
+          title: "Utilisateurs",
+          icon: Icons.User,
+          items: [],
+          url: urls["Utilisateurs"],
+        },
+        {
+          title: "Images",
+          icon: Icons.FourCircle,
+          items: [],
+          url: urls["Images"],
+        },
+        {
+          title: "Comptes rendus",
+          icon: Icons.Table,
+          items: [],
+          url: urls["Comptes rendus"],
+        },
+        {
+          title: "Factures",
+          icon: Icons.PieChart,
+          items: [],
+          url: urls["Factures"],
+        },
       ].filter((item) => item.url), // supprime les items non autorisés
     },
   ];
