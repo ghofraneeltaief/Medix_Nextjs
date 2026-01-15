@@ -108,7 +108,6 @@ export function TableCompteRendu() {
   const handleDeleteCompteRendu = async (id: number) => {
     const result = await Swal.fire({
       title: "Êtes-vous sûr ?",
-      text: "Cette action est irréversible",
       ...SWAL_CONFIG.warning,
     });
 
